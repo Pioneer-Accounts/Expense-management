@@ -1,0 +1,257 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Update the User model to include email and password
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs      Job[]
+  bills     ClientBill[]
+  payments  PaymentReceipt[]
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs      Job[]
+}
+
+model Client {
+  id                    Int                    @id @default(autoincrement())
+  name                  String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  jobs                  Job[]
+  clientBills           ClientBill[]
+  paymentReceipts       PaymentReceipt[]
+  paymentStatuses       ClientPaymentStatus[]
+  contractorBills       ContractorBill[]
+  siteExpenses          SiteExpense[]
+  siteExpenseEnquiries  SiteExpenseEnquiry[]
+}
+
+model Job {
+  id                        Int                      @id @default(autoincrement())
+  jobNo                     String                   @unique
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime                 @updatedAt
+  userId                    Int
+  user                      User                     @relation(fields: [userId], references: [id])
+  clientId                  Int
+  client                    Client                   @relation(fields: [clientId], references: [id])
+  companyId                 Int
+  company                   Company                  @relation(fields: [companyId], references: [id])
+  site                      String
+  workOrderValue            Float
+  clientBills               ClientBill[]
+  paymentReceipts           PaymentReceipt[]
+  paymentStatuses           ClientPaymentStatus[]
+  contractorBills           ContractorBill[]
+  siteExpenses              SiteExpense[]
+  siteExpenseEnquiries      SiteExpenseEnquiry[]
+  contractorPayments        ContractorPayment[]
+  contractorPaymentStatuses ContractorPaymentStatus[]
+}
+
+model ClientBill {
+  id                Int                  @id @default(autoincrement())
+  billNo            String               @unique
+  date              DateTime
+  amount            Float                // Base amount + GST
+  baseAmount        Float
+  gst               Float
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  jobId             Int
+  job               Job                  @relation(fields: [jobId], references: [id])
+  clientId          Int
+  client            Client               @relation(fields: [clientId], references: [id])
+  userId            Int
+  user              User                 @relation(fields: [userId], references: [id])
+  paymentStatuses   ClientPaymentStatus[]
+}
+
+model PaymentReceipt {
+  id                Int                  @id @default(autoincrement())
+  jobId             Int
+  job               Job                  @relation(fields: [jobId], references: [id])
+  billNo            String
+  paymentDate       DateTime
+  paymentMode       String               // CHQ / DD / NEFT / UPI / IMPS
+  chequeOrDdNo      String?              // Optional for non-cheque/DD payments
+  baseAmount        Float
+  gst               Float
+  deductions        Deduction[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  clientId          Int
+  client            Client               @relation(fields: [clientId], references: [id])
+  userId            Int
+  user              User                 @relation(fields: [userId], references: [id])
+}
+
+model Deduction {
+  id                Int                  @id @default(autoincrement())
+  type              DeductionType
+  amount            Float
+  paymentReceiptId  Int
+  paymentReceipt    PaymentReceipt       @relation(fields: [paymentReceiptId], references: [id])
+}
+
+enum DeductionType {
+  IT_TDS
+  GST_TDS
+  SD_RETENTION
+  OTHER
+}
+
+model ClientPaymentStatus {
+  id                Int                  @id @default(autoincrement())
+  jobId             Int
+  job               Job                  @relation(fields: [jobId], references: [id])
+  clientId          Int
+  client            Client               @relation(fields: [clientId], references: [id])
+  billId            Int
+  bill              ClientBill           @relation(fields: [billId], references: [id])
+  billValue         Float
+  paymentDate       DateTime?
+  paymentMode       String?
+  amountPaid        Float
+  balanceDue        Float
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+model ContractorSupplier {
+  id                Int                      @id @default(autoincrement())
+  name              String
+  code              String                   @unique
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  bills             ContractorBill[]
+  payments          ContractorPayment[]
+  paymentStatuses   ContractorPaymentStatus[]
+}
+
+model ContractorBill {
+  id                    Int                      @id @default(autoincrement())
+  jobId                 Int
+  job                   Job                      @relation(fields: [jobId], references: [id])
+  clientId              Int
+  client                Client                   @relation(fields: [clientId], references: [id])
+  contractorSupplierId  Int
+  contractorSupplier    ContractorSupplier       @relation(fields: [contractorSupplierId], references: [id])
+  billNo                String
+  date                  DateTime
+  amount                Float                    // Base amount + GST
+  baseAmount            Float
+  gst                   Float
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  payments              ContractorPayment[]
+  paymentStatuses       ContractorPaymentStatus[]
+}
+
+model ContractorPayment {
+  id                    Int                      @id @default(autoincrement())
+  jobId                 Int
+  job                   Job                      @relation(fields: [jobId], references: [id])
+  billNo                String
+  contractorBillId      Int
+  contractorBill        ContractorBill           @relation(fields: [contractorBillId], references: [id])
+  contractorSupplierId  Int
+  contractorSupplier    ContractorSupplier       @relation(fields: [contractorSupplierId], references: [id])
+  paymentDate           DateTime
+  paymentMode           String                   // CHQ / DD / NEFT / UPI / IMPS
+  chequeOrDdNo          String?                  // Optional for non-cheque/DD payments
+  baseAmount            Float
+  gst                   Float
+  deductions            ContractorDeduction[]
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
+model ContractorDeduction {
+  id                    Int                      @id @default(autoincrement())
+  type                  DeductionType
+  amount                Float
+  contractorPaymentId   Int
+  contractorPayment     ContractorPayment        @relation(fields: [contractorPaymentId], references: [id])
+}
+
+model ContractorPaymentStatus {
+  id                    Int                      @id @default(autoincrement())
+  jobId                 Int
+  job                   Job                      @relation(fields: [jobId], references: [id])
+  contractorSupplierId  Int
+  contractorSupplier    ContractorSupplier       @relation(fields: [contractorSupplierId], references: [id])
+  billId                Int
+  bill                  ContractorBill           @relation(fields: [billId], references: [id])
+  billNo                String
+  billAmount            Float
+  paymentDate           DateTime?
+  paymentMode           String?
+  amountPaid            Float
+  balanceDue            Float
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
+model SiteExpense {
+  id                    Int                      @id @default(autoincrement())
+  jobId                 Int
+  job                   Job                      @relation(fields: [jobId], references: [id])
+  clientId              Int
+  client                Client                   @relation(fields: [clientId], references: [id])
+  siteId                String
+  paymentDate           DateTime
+  campOrName            String                   // Camp / Name field
+  amount                Float
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  refunds               SiteExpenseRefund[]
+}
+
+model SiteExpenseRefund {
+  id                    Int                      @id @default(autoincrement())
+  siteExpenseId         Int
+  siteExpense           SiteExpense              @relation(fields: [siteExpenseId], references: [id])
+  refundDate            DateTime
+  campOrName            String
+  amount                Float
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
+model SiteExpenseEnquiry {
+  id                    Int                      @id @default(autoincrement())
+  jobId                 Int
+  job                   Job                      @relation(fields: [jobId], references: [id])
+  clientId              Int
+  client                Client                   @relation(fields: [clientId], references: [id])
+  date                  DateTime
+  site                  String
+  campOrName            String
+  amount                Float
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
