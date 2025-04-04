@@ -16,6 +16,10 @@ import BillsListPage from './pages/BillsListPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ClientPaymentReceiptForm from './pages/ClientPaymentReceiptForm';
+import ContractorBillsListPage from './pages/ContractorBillsListPage';
+import ContractorBillForm from './pages/ContractorBillForm';
+import ContractorPaymentsListPage from './pages/ContractorPaymentsListPage';
+import ContractorPaymentForm from './pages/ContractorPaymentForm';
 
 function AppRoutes() {
   return (
@@ -99,6 +103,43 @@ function AppRoutes() {
       <Route path="/payments/receipts/edit/:jobId/:receiptId" element={
         <ProtectedRoute>
           <ClientPaymentReceiptForm />
+        </ProtectedRoute>
+      } />
+      
+      {/* Contractor Routes */}
+      <Route path="/contractor-bills" element={
+        <ProtectedRoute>
+          <ContractorBillsListPage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/contractor-bills/new" element={
+        <ProtectedRoute>
+          <ContractorBillForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/contractor-bills/edit/:billId" element={
+        <ProtectedRoute>
+          <ContractorBillForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/contractor-payments" element={
+        <ProtectedRoute>
+          <ContractorPaymentsListPage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/contractor-payments/new" element={
+        <ProtectedRoute>
+          <ContractorPaymentForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/contractor-payments/edit/:paymentId" element={
+        <ProtectedRoute>
+          <ContractorPaymentForm />
         </ProtectedRoute>
       } />
       

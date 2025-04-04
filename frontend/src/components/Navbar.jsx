@@ -7,6 +7,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [expensesDropdownOpen, setExpensesDropdownOpen] = useState(false);
+  const [contractorDropdownOpen, setContractorDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -18,6 +19,10 @@ const Navbar = () => {
 
   const toggleExpensesDropdown = () => {
     setExpensesDropdownOpen(!expensesDropdownOpen);
+  };
+
+  const toggleContractorDropdown = () => {
+    setContractorDropdownOpen(!contractorDropdownOpen);
   };
 
   return (
@@ -51,7 +56,7 @@ const Navbar = () => {
                 className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
                 onClick={toggleExpensesDropdown}
               >
-                Expenses
+                Client
                 <ChevronDown className="h-4 w-4 ml-1" />
               </button>
               
@@ -78,6 +83,50 @@ const Navbar = () => {
                     onClick={() => setExpensesDropdownOpen(false)}
                   >
                     Payment Receipts
+                  </Link>
+                </div>
+              )}
+            </div>
+            
+            {/* Contractor Dropdown */}
+            <div className="relative">
+              <button 
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
+                onClick={toggleContractorDropdown}
+              >
+                Contractor
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </button>
+              
+              {contractorDropdownOpen && (
+                <div className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-700">
+                  <Link 
+                    to="/contractor-bills" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    Contractor Bills
+                  </Link>
+                  <Link 
+                    to="/contractor-bills/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    New Bill Entry
+                  </Link>
+                  <Link 
+                    to="/contractor-payments" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    Payments
+                  </Link>
+                  <Link 
+                    to="/contractor-payments/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    New Payment
                   </Link>
                 </div>
               )}
@@ -152,7 +201,7 @@ const Navbar = () => {
                   className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
                   onClick={() => setExpensesDropdownOpen(!expensesDropdownOpen)}
                 >
-                  <span>Expenses</span>
+                  <span>Client</span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${expensesDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -171,6 +220,57 @@ const Navbar = () => {
                       onClick={toggleMenu}
                     >
                       New Bill Entry
+                    </Link>
+                    <Link
+                      to="/payments/receipts/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Payment Receipts
+                    </Link>
+                  </div>
+                )}
+              </div>
+              
+              {/* Mobile Contractor Menu */}
+              <div>
+                <button
+                  className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
+                  onClick={() => setContractorDropdownOpen(!contractorDropdownOpen)}
+                >
+                  <span>Contractor</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${contractorDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {contractorDropdownOpen && (
+                  <div className="pl-4 mt-1 border-l-2 border-white/20 ml-3">
+                    <Link
+                      to="/contractor-bills"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Contractor Bills
+                    </Link>
+                    <Link
+                      to="/contractor-bills/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      New Bill Entry
+                    </Link>
+                    <Link
+                      to="/contractor-payments"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Payments
+                    </Link>
+                    <Link
+                      to="/contractor-payments/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      New Payment
                     </Link>
                   </div>
                 )}
