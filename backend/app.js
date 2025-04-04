@@ -46,9 +46,9 @@ app.use('/api/site-expense-refunds', siteExpenseRefundRoutes);
 app.use('/api/site-expense-enquiries', siteExpenseEnquiryRoutes);
 
 // Home route
-app.get('/', (req, res) => {
-  res.send('Expense Management API is working');
-});
+// app.get('/', (req, res) => {
+//   res.send('Expense Management API is working');
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {

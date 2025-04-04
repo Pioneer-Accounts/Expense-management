@@ -1,57 +1,196 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Menu, X, ChevronDown } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [expensesDropdownOpen, setExpensesDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleExpensesDropdown = () => {
+    setExpensesDropdownOpen(!expensesDropdownOpen);
+  };
+
   return (
-    <nav className="bg-gradient-to-r from-sky-400 to-sky-600 shadow-md">
+    <nav className="bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-white text-xl font-bold">
+            <Link to="/" className="text-xl font-bold">
               Expense Management
             </Link>
           </div>
-          
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
-                Dashboard
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+              Home
+            </Link>
+            <Link to="/jobs" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+              Jobs
+            </Link>
+            <Link to="/clients" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+              Clients
+            </Link>
+            <Link to="/companies" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+              Companies
+            </Link>
+            
+            {/* Expenses Dropdown */}
+            <div className="relative">
+              <button 
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
+                onClick={toggleExpensesDropdown}
+              >
+                Expenses
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </button>
+              
+              
+              {expensesDropdownOpen && (
+                <div className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-700">
+                  <Link 
+                    to="/expenses/bills" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setExpensesDropdownOpen(false)}
+                  >
+                    Client Bills
+                  </Link>
+                  <Link 
+                    to="/expenses/bills/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setExpensesDropdownOpen(false)}
+                  >
+                    New Bill Entry
+                  </Link>
+                  <Link 
+                    to="/payments/receipts/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setExpensesDropdownOpen(false)}
+                  >
+                    Payment Receipts
+                  </Link>
+                </div>
+              )}
+            </div>
+            
+            {user && (
+              <div className="flex items-center space-x-4">
+                <Link to="/profile" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+                  {user.name || 'Profile'}
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="p-2 rounded-md hover:bg-white/10 transition-colors"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden pb-4">
+            <div className="flex flex-col space-y-2">
+              <Link
+                to="/"
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                onClick={toggleMenu}
+              >
+                Home
               </Link>
-              <Link to="/jobs" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
+              <Link
+                to="/jobs"
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                onClick={toggleMenu}
+              >
                 Jobs
               </Link>
-              <Link to="/clients" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
+              <Link
+                to="/clients"
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                onClick={toggleMenu}
+              >
                 Clients
               </Link>
-              <Link to="/companies" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
+              <Link
+                to="/companies"
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                onClick={toggleMenu}
+              >
                 Companies
               </Link>
-              <Link to="/contractors" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
-                Contractors
-              </Link>
-              <Link to="/expenses" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
-                Expenses
-              </Link>
-            </div>
-          </div>
-          
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-2">
+              
+              {/* Mobile Expenses Menu */}
+              <div>
+                <button
+                  className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
+                  onClick={() => setExpensesDropdownOpen(!expensesDropdownOpen)}
+                >
+                  <span>Expenses</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${expensesDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {expensesDropdownOpen && (
+                  <div className="pl-4 mt-1 border-l-2 border-white/20 ml-3">
+                    <Link
+                      to="/expenses/bills"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Client Bills
+                    </Link>
+                    <Link
+                      to="/expenses/bills/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      New Bill Entry
+                    </Link>
+                  </div>
+                )}
+              </div>
+              
               {user && (
                 <>
-                  <Link to="/profile" className="text-white hover:bg-sky-700 px-3 py-2 rounded-md">
+                  <Link
+                    to="/profile"
+                    className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                    onClick={toggleMenu}
+                  >
                     {user.name || 'Profile'}
                   </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="bg-white text-sky-600 hover:bg-gray-100 px-3 py-2 rounded-md"
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      toggleMenu();
+                    }}
+                    className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 transition-colors text-left"
                   >
                     Logout
                   </button>
@@ -59,15 +198,7 @@ const Navbar = () => {
               )}
             </div>
           </div>
-          
-          <div className="md:hidden">
-            <button className="text-white hover:bg-sky-700 px-2 py-1 rounded-md">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </nav>
   );

@@ -10,9 +10,12 @@ import ClientsListPage from './pages/ClientsListPage';
 import CompaniesListPage from './pages/CompaniesListPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ProfilePage from './pages/ProfilePage';
+import ClientBillForm from './pages/ClientBillForm';
+import BillsListPage from './pages/BillsListPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import ProfilePage from './pages/ProfilePage';
+import ClientPaymentReceiptForm from './pages/ClientPaymentReceiptForm';
 
 function AppRoutes() {
   return (
@@ -29,12 +32,6 @@ function AppRoutes() {
       <Route path="/jobs" element={
         <ProtectedRoute>
           <JobsListPage />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/jobs/new" element={
-        <ProtectedRoute>
-          <JobPage />
         </ProtectedRoute>
       } />
       
@@ -71,6 +68,37 @@ function AppRoutes() {
       <Route path="/profile" element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      } />
+      
+      {/* Bill Routes */}
+      <Route path="/expenses/bills" element={
+        <ProtectedRoute>
+          <BillsListPage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/expenses/bills/new" element={
+        <ProtectedRoute>
+          <ClientBillForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/expenses/bills/edit/:jobId/:billId" element={
+        <ProtectedRoute>
+          <ClientBillForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/payments/receipts/new" element={
+        <ProtectedRoute>
+          <ClientPaymentReceiptForm />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/payments/receipts/edit/:jobId/:receiptId" element={
+        <ProtectedRoute>
+          <ClientPaymentReceiptForm />
         </ProtectedRoute>
       } />
       

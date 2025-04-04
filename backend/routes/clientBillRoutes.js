@@ -9,7 +9,7 @@ router.get('/', clientBillController.getAllClientBills);
 router.get('/:id', clientBillController.getClientBillById);
 
 // POST create new client bill
-router.post('/', clientBillController.createClientBill);
+router.post('/create', clientBillController.createClientBill);
 
 // PUT update client bill
 router.put('/:id', clientBillController.updateClientBill);

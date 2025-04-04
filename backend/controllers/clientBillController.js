@@ -8,7 +8,6 @@ exports.getAllClientBills = async (req, res) => {
       include: {
         job: true,
         client: true,
-        user: true
       }
     });
     res.status(200).json(clientBills);
@@ -46,8 +45,20 @@ exports.getClientBillById = async (req, res) => {
 // Create a new client bill
 exports.createClientBill = async (req, res) => {
   try {
-    const { jobId, clientId, userId, billNo, date, amount, baseAmount, gst } = req.body;
+    const { jobId,  billNo, date, amount, baseAmount, gst } = req.body;
+
+    // First, fetch the job to get the client ID
+    const job = await prisma.job.findUnique({
+      where: { id: parseInt(jobId) },
+      include: { client: true }
+    });
     
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+        // Use the client ID from the job
+        const clientId = job.client.id;
+
     const newClientBill = await prisma.clientBill.create({
       data: {
         billNo,
@@ -61,14 +72,10 @@ exports.createClientBill = async (req, res) => {
         client: {
           connect: { id: parseInt(clientId) }
         },
-        user: {
-          connect: { id: parseInt(userId) }
-        }
       },
       include: {
         job: true,
         client: true,
-        user: true
       }
     });
     

@@ -22,8 +22,12 @@ exports.getAllJobs = async (req, res) => {
 exports.getJobById = async (req, res) => {
   try {
     const { id } = req.params;
-    const job = await prisma.job.findUnique({
-      where: { id: parseInt(id) },
+    
+    // Search by jobNo instead of id
+    const job = await prisma.job.findFirst({
+      where: { 
+        jobNo: (id) 
+      },
       include: {
         user: true,
         client: true,

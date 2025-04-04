@@ -8,7 +8,6 @@ exports.getAllPaymentReceipts = async (req, res) => {
       include: {
         job: true,
         client: true,
-        user: true,
         deductions: true
       }
     });
@@ -28,7 +27,6 @@ exports.getPaymentReceiptById = async (req, res) => {
       include: {
         job: true,
         client: true,
-        user: true,
         deductions: true
       }
     });
@@ -47,41 +45,72 @@ exports.getPaymentReceiptById = async (req, res) => {
 // Create a new payment receipt
 exports.createPaymentReceipt = async (req, res) => {
   try {
-    const { jobId, clientId, userId, billNo, paymentDate, paymentMode, chequeOrDdNo, baseAmount, gst, deductions } = req.body;
-    
+    const { 
+      jobId, 
+      clientId, 
+      billNo, 
+      paymentDate, 
+      paymentMode, 
+      chequeOrDdNo, 
+      baseAmount, 
+      gst, 
+      deductions 
+    } = req.body;
+
+    console.log('Request body:', req.body); // Add logging to debug
+
+    // Validate required fields
+    if (!jobId || !billNo || !paymentDate || !paymentMode || baseAmount === undefined || gst === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if job exists - search by jobNo as string
+    const job = await prisma.job.findFirst({
+      where: { jobNo: jobId.toString() }
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // If clientId is not provided, use the client from the job
+    const finalClientId = clientId || job.clientId;
+
+    // Create payment receipt with deductions
     const newPaymentReceipt = await prisma.paymentReceipt.create({
       data: {
         billNo,
         paymentDate: new Date(paymentDate),
         paymentMode,
         chequeOrDdNo,
-        baseAmount,
-        gst,
+        baseAmount: parseFloat(baseAmount),
+        gst: parseFloat(gst),
         job: {
-          connect: { id: parseInt(jobId) }
+          connect: { id: job.id } // Connect using the job's actual ID
         },
         client: {
-          connect: { id: parseInt(clientId) }
-        },
-        user: {
-          connect: { id: parseInt(userId) }
+          connect: { id: parseInt(finalClientId) }
         },
         deductions: {
-          create: deductions || []
+          create: deductions && Array.isArray(deductions) 
+            ? deductions.filter(d => d.amount > 0).map(d => ({
+                type: d.type,
+                amount: parseFloat(d.amount)
+              }))
+            : []
         }
       },
       include: {
         job: true,
         client: true,
-        user: true,
         deductions: true
       }
     });
-    
+
     res.status(201).json(newPaymentReceipt);
   } catch (error) {
     console.error('Error creating payment receipt:', error);
-    res.status(500).json({ error: 'Failed to create payment receipt' });
+    res.status(500).json({ error: 'Failed to create payment receipt', details: error.message });
   }
 };
 

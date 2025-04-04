@@ -22,8 +22,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   jobs      Job[]
-  bills     ClientBill[]
-  payments  PaymentReceipt[]
+
 }
 
 model Company {
@@ -84,8 +83,6 @@ model ClientBill {
   job               Job                  @relation(fields: [jobId], references: [id])
   clientId          Int
   client            Client               @relation(fields: [clientId], references: [id])
-  userId            Int
-  user              User                 @relation(fields: [userId], references: [id])
   paymentStatuses   ClientPaymentStatus[]
 }
 
@@ -104,8 +101,6 @@ model PaymentReceipt {
   updatedAt         DateTime             @updatedAt
   clientId          Int
   client            Client               @relation(fields: [clientId], references: [id])
-  userId            Int
-  user              User                 @relation(fields: [userId], references: [id])
 }
 
 model Deduction {
