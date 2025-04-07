@@ -49,23 +49,55 @@ exports.getContractorBillById = async (req, res) => {
 // Create a new contractor bill
 exports.createContractorBill = async (req, res) => {
   try {
-    const { jobId, clientId, contractorSupplierId, billNo, date, amount, baseAmount, gst } = req.body;
+    const { jobId, contractorSupplierId, billNo, billDate, baseAmount, gst } = req.body;
+    
+    // Validate required fields
+    if (!jobId || !contractorSupplierId || !billNo || !billDate) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Parse and validate date
+    const parsedDate = new Date(billDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+    
+    // Calculate total amount
+    const numBaseAmount = parseFloat(baseAmount) || 0;
+    const numGst = parseFloat(gst) || 0;
+    const totalAmount = numBaseAmount + numGst;
+    
+    // Get client ID from job
+    const job = await prisma.job.findUnique({
+      where: { id: parseInt(jobId) },
+      select: { clientId: true }
+    });
+    
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
     
     const newContractorBill = await prisma.contractorBill.create({
       data: {
         billNo,
-        date: new Date(date),
-        amount,
-        baseAmount,
-        gst,
+        date: parsedDate,
+        amount: totalAmount,
+        baseAmount: numBaseAmount,
+        gst: numGst,
         job: {
-          connect: { id: parseInt(jobId) }
+          connect: {
+            id: parseInt(jobId)
+          }
         },
         client: {
-          connect: { id: parseInt(clientId) }
+          connect: {
+            id: job.clientId
+          }
         },
         contractorSupplier: {
-          connect: { id: parseInt(contractorSupplierId) }
+          connect: {
+            id: parseInt(contractorSupplierId)
+          }
         }
       },
       include: {

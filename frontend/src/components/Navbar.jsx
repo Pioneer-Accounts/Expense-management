@@ -49,6 +49,9 @@ const Navbar = () => {
             <Link to="/companies" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
               Companies
             </Link>
+            <Link to="/contractors/new" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+              Contractor/Suppliers
+            </Link>
             
             {/* Expenses Dropdown */}
             <div className="relative">
@@ -164,35 +167,22 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4">
+          <div className="md:hidden py-4">
             <div className="flex flex-col space-y-2">
-              <Link
-                to="/"
-                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
-                onClick={toggleMenu}
-              >
+              <Link to="/" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Home
               </Link>
-              <Link
-                to="/jobs"
-                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
-                onClick={toggleMenu}
-              >
+              <Link to="/jobs" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Jobs
               </Link>
-              <Link
-                to="/clients"
-                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
-                onClick={toggleMenu}
-              >
+              <Link to="/clients" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Clients
               </Link>
-              <Link
-                to="/companies"
-                className="px-3 py-2 rounded hover:bg-white/10 transition-colors"
-                onClick={toggleMenu}
-              >
+              <Link to="/companies" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Companies
+              </Link>
+              <Link to="/contractors/new" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
+                Contractor
               </Link>
               
               {/* Mobile Expenses Menu */}

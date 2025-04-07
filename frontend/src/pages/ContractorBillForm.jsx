@@ -104,15 +104,53 @@ const ContractorBillForm = () => {
     }));
   };
   
-  const handleJobChange = (e) => {
+  const [jobError, setJobError] = useState('');
+  const [jobLoading, setJobLoading] = useState(false);
+  
+  // Replace handleJobChange with handleJobIdChange
+  const handleJobIdChange = async (e) => {
     const jobId = e.target.value;
     setFormData(prev => ({
       ...prev,
       jobId
     }));
     
-    const selectedJob = jobs.find(job => job.id.toString() === jobId);
-    setSelectedJob(selectedJob);
+    if (!jobId) {
+      setSelectedJob(null);
+      setJobError('');
+      return;
+    }
+    
+    setJobLoading(true);
+    setJobError('');
+    
+    try {
+      // Fetch job by ID
+      const response = await fetch(`http://localhost:5000/api/jobs/${jobId}`);
+      
+      if (!response.ok) {
+        throw new Error('Job not found');
+      }
+      
+      const jobData = await response.json();
+      setSelectedJob(jobData);
+    } catch (err) {
+      console.error('Error fetching job:', err);
+      setJobError('Job not found with this ID');
+      setSelectedJob(null);
+    } finally {
+      setJobLoading(false);
+    }
+  };
+  
+  // Update getClientName function
+  const getClientName = () => {
+    if (!selectedJob) return 'Enter a valid job ID first';
+    
+    if (!selectedJob.clientId) return 'No client associated with this job';
+    
+    const client = clients.find(c => c.id.toString() === selectedJob.clientId.toString());
+    return client ? client.name : 'Unknown client';
   };
   
   const handleNumberChange = (e) => {
@@ -262,15 +300,15 @@ const ContractorBillForm = () => {
     }
   };
   
-  const getClientName = (jobId) => {
-    if (!jobId || !jobs.length) return 'Select a job first';
+  // const getClientName = (jobId) => {
+  //   if (!jobId || !jobs.length) return 'Select a job first';
     
-    const job = jobs.find(j => j.id.toString() === jobId.toString());
-    if (!job || !job.clientId) return 'Unknown client';
+  //   const job = jobs.find(j => j.id.toString() === jobId.toString());
+  //   if (!job || !job.clientId) return 'Unknown client';
     
-    const client = clients.find(c => c.id.toString() === job.clientId.toString());
-    return client ? client.name : 'Unknown client';
-  };
+  //   const client = clients.find(c => c.id.toString() === job.clientId.toString());
+  //   return client ? client.name : 'Unknown client';
+  // };
   
   if (loading) {
     return (
@@ -306,27 +344,37 @@ const ContractorBillForm = () => {
             <div className="p-6">
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
-                  {/* Job and Client Section */}
+                  {/* Job and Client Section - Modified to use text input */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="jobId" className="block text-sm font-medium">
-                        Job <span className="text-red-500">*</span>
+                        Job ID <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="jobId"
-                        name="jobId"
-                        value={formData.jobId}
-                        onChange={handleJobChange}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2"
-                        required
-                      >
-                        <option value="">Select a job</option>
-                        {jobs.map(job => (
-                          <option key={job.id} value={job.id}>
-                            {job.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <input
+                          id="jobId"
+                          name="jobId"
+                          type="text"
+                          value={formData.jobId}
+                          onChange={handleJobIdChange}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2"
+                          required
+                          placeholder="Enter job ID"
+                        />
+                        {jobLoading && (
+                          <div className="absolute right-3 top-2">
+                            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      {jobError && (
+                        <p className="text-sm text-red-600 mt-1">{jobError}</p>
+                      )}
+                      {selectedJob && !jobError && (
+                        <p className="text-sm text-green-600 mt-1">
+                          Job found: {selectedJob.name || selectedJob.jobNo || `Job #${selectedJob.id}`}
+                        </p>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
@@ -335,7 +383,7 @@ const ContractorBillForm = () => {
                       </label>
                       <input
                         type="text"
-                        value={getClientName(formData.jobId)}
+                        value={getClientName()}
                         className="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-100"
                         readOnly
                       />

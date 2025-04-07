@@ -20,6 +20,7 @@ import ContractorBillsListPage from './pages/ContractorBillsListPage';
 import ContractorBillForm from './pages/ContractorBillForm';
 import ContractorPaymentsListPage from './pages/ContractorPaymentsListPage';
 import ContractorPaymentForm from './pages/ContractorPaymentForm';
+import ContractorForm from './pages/ContractorForm';
 
 function AppRoutes() {
   return (
@@ -107,6 +108,12 @@ function AppRoutes() {
       } />
       
       {/* Contractor Routes */}
+      <Route path="/contractors/new" element={
+        <ProtectedRoute>
+          <ContractorForm />
+        </ProtectedRoute>
+      } />
+      
       <Route path="/contractor-bills" element={
         <ProtectedRoute>
           <ContractorBillsListPage />

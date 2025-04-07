@@ -18,6 +18,8 @@ const contractorPaymentStatusRoutes = require('./routes/contractorPaymentStatusR
 const siteExpenseRoutes = require('./routes/siteExpenseRoutes');
 const siteExpenseRefundRoutes = require('./routes/siteExpenseRefundRoutes');
 const siteExpenseEnquiryRoutes = require('./routes/siteExpenseEnquiryRoutes');
+// Import routes
+const contractorRoutes = require('./routes/contractorRoutes');
 
 const app = express();
 
@@ -45,6 +47,8 @@ app.use('/api/site-expenses', siteExpenseRoutes);
 app.use('/api/site-expense-refunds', siteExpenseRefundRoutes);
 app.use('/api/site-expense-enquiries', siteExpenseEnquiryRoutes);
 
+// Use routes
+app.use('/api/contractors', contractorRoutes);
 // Home route
 // app.get('/', (req, res) => {
 //   res.send('Expense Management API is working');

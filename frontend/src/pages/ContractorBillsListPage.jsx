@@ -84,9 +84,10 @@ const ContractorBillsListPage = () => {
   
   const filteredBills = bills.filter(bill => {
     const contractorName = getContractorName(bill.contractorSupplierId).toLowerCase();
-    const jobName = getJobName(bill.jobId).toLowerCase();
+    const jobName = getJobName(bill.jobId)
     const billNo = bill.billNo?.toLowerCase() || '';
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm;
+    const date = bill.billDate?.toLowerCase() || '';
     
     return contractorName.includes(search) || 
            jobName.includes(search) || 
