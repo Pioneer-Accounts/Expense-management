@@ -108,14 +108,17 @@ const ContractorBillForm = () => {
   const [jobLoading, setJobLoading] = useState(false);
   
   // Replace handleJobChange with handleJobIdChange
+  // Fixing Job Not Found Error in ContractorBillForm
+  
   const handleJobIdChange = async (e) => {
-    const jobId = e.target.value;
+    const jobNo = e.target.value;
     setFormData(prev => ({
       ...prev,
-      jobId
+      jobNo,
+      jobId: '' // Clear jobId when jobNo changes
     }));
     
-    if (!jobId) {
+    if (!jobNo) {
       setSelectedJob(null);
       setJobError('');
       return;
@@ -125,18 +128,31 @@ const ContractorBillForm = () => {
     setJobError('');
     
     try {
-      // Fetch job by ID
-      const response = await fetch(`http://localhost:5000/api/jobs/${jobId}`);
+      // Fetch job by jobNo instead of ID
+      const response = await fetch(`http://localhost:5000/api/jobs?jobNo=${jobNo}`);
       
       if (!response.ok) {
         throw new Error('Job not found');
       }
       
-      const jobData = await response.json();
+      const jobsData = await response.json();
+      
+      // Check if any job was found with this jobNo
+      if (jobsData.length === 0) {
+        throw new Error('No job found with this number');
+      }
+      
+      const jobData = jobsData[0]; // Take the first matching job
       setSelectedJob(jobData);
+      
+      // Set the jobId in formData
+      setFormData(prev => ({
+        ...prev,
+        jobId: jobData.id
+      }));
     } catch (err) {
       console.error('Error fetching job:', err);
-      setJobError('Job not found with this ID');
+      setJobError('Job not found with this number');
       setSelectedJob(null);
     } finally {
       setJobLoading(false);
@@ -373,14 +389,14 @@ const ContractorBillForm = () => {
                       </label>
                       <div className="relative">
                         <input
-                          id="jobId"
-                          name="jobId"
+                          id="jobNo"
+                          name="jobNo"
                           type="text"
-                          value={formData.jobId}
+                          value={formData.jobNo || ''}
                           onChange={handleJobIdChange}
                           className="w-full rounded-md border border-gray-300 px-3 py-2"
                           required
-                          placeholder="Enter job ID"
+                          placeholder="Enter job number"
                         />
                         {jobLoading && (
                           <div className="absolute right-3 top-2">
