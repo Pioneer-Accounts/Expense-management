@@ -1,218 +1,152 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Edit, Eye, Trash, Search, Download } from 'lucide-react';
+import { Plus, Edit, Eye, AlertCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { Button } from '../components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 
 const ContractorBillsListPage = () => {
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [contractors, setContractors] = useState([]);
-  const [jobs, setJobs] = useState([]);
   
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBills = async () => {
       try {
-        // Fetch bills
-        const billsResponse = await fetch('http://localhost:5000/api/contractor-bills');
-        if (!billsResponse.ok) throw new Error('Failed to fetch bills');
-        const billsData = await billsResponse.json();
-        setBills(billsData);
-        
-        // Fetch contractors
-        const contractorsResponse = await fetch('http://localhost:5000/api/contractors');
-        if (!contractorsResponse.ok) throw new Error('Failed to fetch contractors');
-        const contractorsData = await contractorsResponse.json();
-        setContractors(contractorsData);
-        
-        // Fetch jobs
-        const jobsResponse = await fetch('http://localhost:5000/api/jobs');
-        if (!jobsResponse.ok) throw new Error('Failed to fetch jobs');
-        const jobsData = await jobsResponse.json();
-        setJobs(jobsData);
+        const response = await fetch('http://localhost:5000/api/contractor-bills');
+        if (!response.ok) {
+          throw new Error('Failed to fetch contractor bills');
+        }
+        const data = await response.json();
+        setBills(data);
       } catch (err) {
-        setError(err.message || 'An error occurred while loading data');
+        setError('Failed to load contractor bills');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchData();
+    fetchBills();
   }, []);
   
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this bill?')) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/contractor-bills/${id}`, {
-          method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to delete bill');
-        }
-        
-        // Remove the deleted bill from the state
-        setBills(bills.filter(bill => bill.id !== id));
-      } catch (err) {
-        setError(err.message || 'An error occurred while deleting the bill');
-        console.error(err);
-      }
-    }
-  };
-  
-  const getContractorName = (contractorId) => {
-    const contractor = contractors.find(c => c.id.toString() === contractorId?.toString());
-    return contractor ? contractor.name : 'Unknown';
-  };
-  
-  const getJobName = (jobId) => {
-    const job = jobs.find(j => j.id.toString() === jobId?.toString());
-    return job ? job.name : 'Unknown';
-  };
-  
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-  
-  const filteredBills = bills.filter(bill => {
-    const contractorName = getContractorName(bill.contractorSupplierId).toLowerCase();
-    const jobName = getJobName(bill.jobId);
-    const billNo = bill.billNo?.toLowerCase() || '';
-    const search = searchTerm.toLowerCase();
-    const materialInfo = (bill.materialCode || '') + ' ' + (bill.materialDescription || '');
-    
-    return contractorName.includes(search) || 
-           jobName.includes(search) || 
-           billNo.includes(search) ||
-           materialInfo.toLowerCase().includes(search);
-  });
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Contractor Bills</h1>
-          <Link 
-            to="/contractor-bills/new" 
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 flex items-center"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Bill
+          <h1 className="text-3xl font-bold text-gray-800">Contractor Bills</h1>
+          <Link to="/contractor-bills/new">
+            <Button className="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Bill
+            </Button>
           </Link>
         </div>
         
         {error && (
-          <div className="mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg">
-            {error}
+          <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-md flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 mt-0.5" />
+            <span>{error}</span>
           </div>
         )}
         
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="p-4 border-b">
-            <div className="flex items-center">
-              <div className="relative flex-1 max-w-md">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search bills..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full rounded-md border border-gray-300 px-3 py-2"
-                />
-              </div>
-              
-            </div>
-          </div>
-          
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-primary border-r-transparent"></div>
-              <p className="mt-2 text-gray-500">Loading bills...</p>
-            </div>
-          ) : filteredBills.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-gray-500">No bills found.</p>
-            </div>
-          ) : (
+        <Card>
+          <CardHeader className="bg-gradient-to-r from-sky-500/10 to-indigo-600/10 pb-4">
+            <CardTitle>Contractor Bills List</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-                  <tr>
-                    <th className="px-6 py-3 text-left">Bill No</th>
-                    <th className="px-6 py-3 text-left">Contractor</th>
-                    <th className="px-6 py-3 text-left">Job</th>
-                    <th className="px-6 py-3 text-left">Date</th>
-                    <th className="px-6 py-3 text-left">Material</th>
-                    <th className="px-6 py-3 text-right">Amount</th>
-                    <th className="px-6 py-3 text-center">Actions</th>
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Bill No
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Job
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Contractor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Material Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredBills.map(bill => (
-                    <tr key={bill.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{bill.billNo}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getContractorName(bill.contractorSupplierId)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getJobName(bill.jobId)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{formatDate(bill.date)}</td>
-                      <td className="px-6 py-4">
-                        {bill.materialCode ? (
-                          <div>
-                            <div className="font-medium">{bill.materialCode}</div>
-                            <div className="text-sm text-gray-500">
-                              {bill.materialDescription}
-                              {bill.quantity && bill.unit && (
-                                <span> ({bill.quantity} {bill.unit})</span>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">No material details</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        ₹{parseFloat(bill.baseAmount || 0) + parseFloat(bill.gst || 0).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex justify-center space-x-2">
-                          <Link 
-                            to={`/contractor-bills/${bill.id}/view`}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                          >
-                            <Eye className="h-5 w-5" />
-                          </Link>
-                          <Link 
-                            to={`/contractor-bills/${bill.id}/edit`}
-                            className="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </Link>
-                          <button 
-                            onClick={() => handleDelete(bill.id)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
-                          >
-                            <Trash className="h-5 w-5" />
-                          </button>
-                        </div>
+                <tbody>
+                  {bills.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-4 text-center text-muted-foreground">
+                        No contractor bills found
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    bills.map((bill) => (
+                      <tr key={bill.id} className="border-b hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {bill.billNo}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {new Date(bill.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {bill.job?.jobNo}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {bill.contractorSupplier?.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {bill.materialCode ? `${bill.materialCode.code} - ${bill.materialCode.description}` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          ₹ {bill.amount.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <Link to={`/contractor-bills/${bill.id}/edit`}>
+                              <Button variant="outline" size="sm" className="h-8 px-2 text-sky-600 border-sky-600 hover:bg-sky-50">
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button>
+                            </Link>
+                            <Link to={`/contractor-bills/${bill.id}/details`}>
+                              <Button variant="outline" size="sm" className="h-8 px-2 text-indigo-600 border-indigo-600 hover:bg-indigo-50">
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View</span>
+                              </Button>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

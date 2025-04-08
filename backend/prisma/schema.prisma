@@ -154,6 +154,8 @@ model ContractorBill {
   client                Client                   @relation(fields: [clientId], references: [id])
   contractorSupplierId  Int
   contractorSupplier    ContractorSupplier       @relation(fields: [contractorSupplierId], references: [id])
+  materialCodeId        Int?                     // Added materialCodeId field (optional)
+  materialCode          MaterialCode?            @relation(fields: [materialCodeId], references: [id])
   billNo                String
   date                  DateTime
   amount                Float                    // Base amount + GST
@@ -258,5 +260,6 @@ model MaterialCode {
   unit                String?           // Optional unit of measurement
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+  contractorBills     ContractorBill[]  // Added relation to ContractorBill
 }
 

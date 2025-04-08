@@ -9,6 +9,7 @@ exports.getAllContractorBills = async (req, res) => {
         job: true,
         client: true,
         contractorSupplier: true,
+        materialCode: true, // Include material code
         payments: true,
         paymentStatuses: true
       }
@@ -30,6 +31,7 @@ exports.getContractorBillById = async (req, res) => {
         job: true,
         client: true,
         contractorSupplier: true,
+        materialCode: true, // Include material code
         payments: true,
         paymentStatuses: true
       }
@@ -49,7 +51,15 @@ exports.getContractorBillById = async (req, res) => {
 // Create a new contractor bill
 exports.createContractorBill = async (req, res) => {
   try {
-    const { jobId, contractorSupplierId, billNo, billDate, baseAmount, gst } = req.body;
+    const { 
+      jobId, 
+      contractorSupplierId, 
+      materialCodeId, // New field
+      billNo, 
+      billDate, 
+      baseAmount, 
+      gst 
+    } = req.body;
     
     // Validate required fields
     if (!jobId || !contractorSupplierId || !billNo || !billDate) {
@@ -77,33 +87,46 @@ exports.createContractorBill = async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
     
-    const newContractorBill = await prisma.contractorBill.create({
-      data: {
-        billNo,
-        date: parsedDate,
-        amount: totalAmount,
-        baseAmount: numBaseAmount,
-        gst: numGst,
-        job: {
-          connect: {
-            id: parseInt(jobId)
-          }
-        },
-        client: {
-          connect: {
-            id: job.clientId
-          }
-        },
-        contractorSupplier: {
-          connect: {
-            id: parseInt(contractorSupplierId)
-          }
+    // Create data object
+    const billData = {
+      billNo,
+      date: parsedDate,
+      amount: totalAmount,
+      baseAmount: numBaseAmount,
+      gst: numGst,
+      job: {
+        connect: {
+          id: parseInt(jobId)
         }
       },
+      client: {
+        connect: {
+          id: job.clientId
+        }
+      },
+      contractorSupplier: {
+        connect: {
+          id: parseInt(contractorSupplierId)
+        }
+      }
+    };
+    
+    // Add material code if provided
+    if (materialCodeId) {
+      billData.materialCode = {
+        connect: {
+          id: parseInt(materialCodeId)
+        }
+      };
+    }
+    
+    const newContractorBill = await prisma.contractorBill.create({
+      data: billData,
       include: {
         job: true,
         client: true,
-        contractorSupplier: true
+        contractorSupplier: true,
+        materialCode: true // Include material code in response
       }
     });
     
@@ -118,30 +141,69 @@ exports.createContractorBill = async (req, res) => {
 exports.updateContractorBill = async (req, res) => {
   try {
     const { id } = req.params;
-    const { jobId, clientId, contractorSupplierId, billNo, date, amount, baseAmount, gst } = req.body;
+    const { 
+      jobId, 
+      clientId, 
+      contractorSupplierId, 
+      materialCodeId, // New field
+      billNo, 
+      date,
+      amount, 
+      baseAmount, 
+      gst 
+    } = req.body;
+    
+    // Create update data object
+    const updateData = {};
+    
+    // Add fields if they exist in the request
+    if (billNo) updateData.billNo = billNo;
+    if (date) updateData.date = new Date(date);
+    if (amount !== undefined) updateData.amount = parseFloat(amount);
+    if (baseAmount !== undefined) updateData.baseAmount = parseFloat(baseAmount);
+    if (gst !== undefined) updateData.gst = parseFloat(gst);
+    
+    // Add relations if they exist in the request
+    if (jobId) {
+      updateData.job = {
+        connect: { id: parseInt(jobId) }
+      };
+    }
+    
+    if (clientId) {
+      updateData.client = {
+        connect: { id: parseInt(clientId) }
+      };
+    }
+    
+    if (contractorSupplierId) {
+      updateData.contractorSupplier = {
+        connect: { id: parseInt(contractorSupplierId) }
+      };
+    }
+    
+    // Handle material code - can be connected, disconnected, or unchanged
+    if (materialCodeId !== undefined) {
+      if (materialCodeId) {
+        updateData.materialCode = {
+          connect: { id: parseInt(materialCodeId) }
+        };
+      } else {
+        // If materialCodeId is null or empty string, disconnect the relation
+        updateData.materialCode = {
+          disconnect: true
+        };
+      }
+    }
     
     const updatedContractorBill = await prisma.contractorBill.update({
       where: { id: parseInt(id) },
-      data: {
-        billNo,
-        date: date ? new Date(date) : undefined,
-        amount,
-        baseAmount,
-        gst,
-        job: jobId ? {
-          connect: { id: parseInt(jobId) }
-        } : undefined,
-        client: clientId ? {
-          connect: { id: parseInt(clientId) }
-        } : undefined,
-        contractorSupplier: contractorSupplierId ? {
-          connect: { id: parseInt(contractorSupplierId) }
-        } : undefined
-      },
+      data: updateData,
       include: {
         job: true,
         client: true,
-        contractorSupplier: true
+        contractorSupplier: true,
+        materialCode: true // Include material code in response
       }
     });
     

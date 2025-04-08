@@ -13,8 +13,9 @@ const ContractorBillForm = () => {
   
   const [formData, setFormData] = useState({
     jobId: '',
+    jobNo: '',
     contractorSupplierId: '',
-    materialCode: '',
+    materialCodeId: '', // This field now matches the backend schema
     billDate: new Date().toISOString().split('T')[0],
     billNo: '',
     baseAmount: 0,
@@ -35,9 +36,7 @@ const ContractorBillForm = () => {
   
   // Modal states for creating new items
   const [showContractorModal, setShowContractorModal] = useState(false);
-  const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [newContractor, setNewContractor] = useState({ name: '', code: '', contactPerson: '', phone: '' });
-  const [newMaterial, setNewMaterial] = useState({ code: '', description: '', unit: '' });
   
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +59,7 @@ const ContractorBillForm = () => {
         const contractorsData = await contractorsResponse.json();
         setContractors(contractorsData);
         
-        // Fetch material codes - Add this new API call
+        // Fetch material codes
         const materialCodesResponse = await fetch('http://localhost:5000/api/material-codes');
         if (!materialCodesResponse.ok) throw new Error('Failed to fetch material codes');
         const materialCodesData = await materialCodesResponse.json();
@@ -73,12 +72,13 @@ const ContractorBillForm = () => {
           const billData = await billResponse.json();
           
           // Format the date
-          const formattedDate = new Date(billData.billDate).toISOString().split('T')[0];
+          const formattedDate = new Date(billData.date).toISOString().split('T')[0];
           
           setFormData({
             ...billData,
+            jobNo: billData.job?.jobNo || '',
             billDate: formattedDate,
-            totalAmount: billData.baseAmount + billData.gst
+            totalAmount: billData.amount // Use amount from the API response
           });
           
           // Set selected job
@@ -106,9 +106,6 @@ const ContractorBillForm = () => {
   
   const [jobError, setJobError] = useState('');
   const [jobLoading, setJobLoading] = useState(false);
-  
-  // Replace handleJobChange with handleJobIdChange
-  // Fixing Job Not Found Error in ContractorBillForm
   
   const handleJobIdChange = async (e) => {
     const jobNo = e.target.value;
@@ -191,23 +188,13 @@ const ContractorBillForm = () => {
     }
   };
   
-  // Add this function to handle material code selection
+  // Handle material code selection
   const handleMaterialCodeChange = (e) => {
     const materialCodeId = e.target.value;
     setFormData(prev => ({
       ...prev,
-      materialCode: materialCodeId
+      materialCodeId
     }));
-    
-    // Find the selected material code and update related fields
-    const selectedMaterial = materialCodes.find(code => code.id.toString() === materialCodeId.toString());
-    if (selectedMaterial) {
-      setFormData(prev => ({
-        ...prev,
-        materialDescription: selectedMaterial.description || '',
-        unit: selectedMaterial.unit || prev.unit || ''
-      }));
-    }
   };
   
   const handleSubmit = async (e) => {
@@ -219,19 +206,31 @@ const ContractorBillForm = () => {
       // Validate form
       if (!formData.jobId) throw new Error('Please select a job');
       if (!formData.contractorSupplierId) throw new Error('Please select a contractor/supplier');
-      if (!formData.materialCode) throw new Error('Please select a material code');
       if (!formData.billDate) throw new Error('Please enter bill date');
       if (!formData.billNo) throw new Error('Please enter bill number');
       if (formData.baseAmount <= 0) throw new Error('Base amount must be greater than zero');
+      
+      // Prepare data for API
+      const dataToSend = {
+        jobId: parseInt(formData.jobId),
+        contractorSupplierId: parseInt(formData.contractorSupplierId),
+        billNo: formData.billNo,
+        billDate: formData.billDate,
+        baseAmount: parseFloat(formData.baseAmount),
+        gst: parseFloat(formData.gst),
+        remarks: formData.remarks || ''
+      };
+      
+      // Add materialCodeId if it exists
+      if (formData.materialCodeId) {
+        dataToSend.materialCodeId = parseInt(formData.materialCodeId);
+      }
       
       const url = isEditMode 
         ? `http://localhost:5000/api/contractor-bills/${id}`
         : 'http://localhost:5000/api/contractor-bills';
       
       const method = isEditMode ? 'PUT' : 'POST';
-      
-      // Remove totalAmount as it's calculated on the server
-      const { totalAmount, ...dataToSend } = formData;
       
       const response = await fetch(url, {
         method,
@@ -309,42 +308,6 @@ const ContractorBillForm = () => {
     }
   };
   
-  const handleCreateMaterial = async (e) => {
-    e.preventDefault();
-    try {
-      if (!newMaterial.code || !newMaterial.name) {
-        throw new Error('Code and name are required');
-      }
-      
-      // In a real app, you would save this to the backend
-      // For now, we'll just add it to the local state
-      const newMaterialWithId = {
-        id: newMaterial.code,
-        ...newMaterial
-      };
-      
-      setMaterialCodes([...materialCodes, newMaterialWithId]);
-      setFormData(prev => ({
-        ...prev,
-        materialCode: newMaterialWithId.id
-      }));
-      setShowMaterialModal(false);
-      setNewMaterial({ code: '', description: '', unit: '' });
-    } catch (err) {
-      alert(err.message || 'Failed to create material code');
-    }
-  };
-  
-  // const getClientName = (jobId) => {
-  //   if (!jobId || !jobs.length) return 'Select a job first';
-    
-  //   const job = jobs.find(j => j.id.toString() === jobId.toString());
-  //   if (!job || !job.clientId) return 'Unknown client';
-    
-  //   const client = clients.find(c => c.id.toString() === job.clientId.toString());
-  //   return client ? client.name : 'Unknown client';
-  // };
-  
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -355,8 +318,6 @@ const ContractorBillForm = () => {
       </div>
     );
   }
-  
-
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -381,7 +342,7 @@ const ContractorBillForm = () => {
             <div className="p-6">
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
-                  {/* Job and Client Section - Modified to use text input */}
+                  {/* Job and Client Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="jobId" className="block text-sm font-medium">
@@ -409,7 +370,7 @@ const ContractorBillForm = () => {
                       )}
                       {selectedJob && !jobError && (
                         <p className="text-sm text-green-600 mt-1">
-                          Job found: {selectedJob.name || selectedJob.jobNo || `Job #${selectedJob.id}`}
+                          Job found: { selectedJob.jobNo || `Job #${selectedJob.id}`}
                         </p>
                       )}
                     </div>
@@ -459,27 +420,27 @@ const ContractorBillForm = () => {
                       </div>
                     </div>
                     
+                    {/* Material Code Section */}
                     <div className="space-y-2">
-                      <label htmlFor="materialCode" className="block text-sm font-medium">
+                      <label htmlFor="materialCodeId" className="block text-sm font-medium">
                         Material Code <span className="text-red-500">*</span>
                       </label>
                       <div className="flex space-x-2">
                         <select
-                          id="materialCode"
-                          name="materialCode"
-                          value={formData.materialCode || ""}
+                          id="materialCodeId"
+                          name="materialCodeId"
+                          value={formData.materialCodeId || ''}
                           onChange={handleMaterialCodeChange}
                           className="w-full rounded-md border border-gray-300 px-3 py-2"
-                          required
                         >
-                          <option value="">Select material code</option>
+                          <option value="">Select Material Code</option>
                           {materialCodes.map(code => (
                             <option key={code.id} value={code.id}>
                               {code.code} - {code.description}
                             </option>
                           ))}
                         </select>
-                        <Link to="/material-codes/new" >
+                        <Link to="/material-codes/new">
                           <button
                             type="button"
                             className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
@@ -489,6 +450,15 @@ const ContractorBillForm = () => {
                         </Link>
                       </div>
                     </div>
+                    
+                    {/* Display selected material description if needed */}
+                    {formData.materialCodeId && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">
+                          Selected Material: {materialCodes.find(code => code.id.toString() === formData.materialCodeId.toString())?.description || ''}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Bill Details Section */}
@@ -585,12 +555,12 @@ const ContractorBillForm = () => {
                     </div>
                   </div>
                   
-                  {/* Action Buttons */}
-                  <div className="flex justify-end space-x-3 pt-4">
+                  <div className="flex justify-end space-x-3 pt-4 border-t">
                     <button
                       type="button"
                       onClick={() => navigate('/contractor-bills')}
                       className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                      disabled={submitting}
                     >
                       Cancel
                     </button>
@@ -600,36 +570,33 @@ const ContractorBillForm = () => {
                         type="button"
                         onClick={handleDelete}
                         className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
+                        disabled={submitting}
                       >
-                        <Trash className="mr-2 h-4 w-4" />
+                        <Trash className="h-4 w-4 mr-2" />
                         Delete
                       </button>
                     )}
                     
                     <button
                       type="submit"
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 flex items-center"
                       disabled={submitting}
-                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center"
                     >
                       {submitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Saving...
+                        </>
+                      ) : isEditMode ? (
+                        <>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Update
                         </>
                       ) : (
                         <>
-                          {isEditMode ? (
-                            <>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Update
-                            </>
-                          ) : (
-                            <>
-                              <Save  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"/>
+                         <Save className="mr-2 h-4 w-4" />
                               Save
                             </>
-                          )}
-                        </>
                       )}
                     </button>
                   </div>
@@ -640,7 +607,7 @@ const ContractorBillForm = () => {
         </div>
       </div>
       
-      {/* Contractor Creation Modal */}
+      {/* Contractor Modal */}
       {showContractorModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -648,9 +615,7 @@ const ContractorBillForm = () => {
             <form onSubmit={handleCreateContractor}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Name <span className="text-red-500">*</span>
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Name *</label>
                   <input
                     type="text"
                     value={newContractor.name}
@@ -659,11 +624,8 @@ const ContractorBillForm = () => {
                     required
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Code <span className="text-red-500">*</span>
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Code *</label>
                   <input
                     type="text"
                     value={newContractor.code}
@@ -672,31 +634,24 @@ const ContractorBillForm = () => {
                     required
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Contact Person
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Contact Person</label>
                   <input
                     type="text"
-                    value={newContractor.contactPerson}
+                    value={newContractor.contactPerson || ''}
                     onChange={(e) => setNewContractor({...newContractor, contactPerson: e.target.value})}
                     className="w-full rounded-md border border-gray-300 px-3 py-2"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Phone
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Phone</label>
                   <input
                     type="text"
-                    value={newContractor.phone}
+                    value={newContractor.phone || ''}
                     onChange={(e) => setNewContractor({...newContractor, phone: e.target.value})}
                     className="w-full rounded-md border border-gray-300 px-3 py-2"
                   />
                 </div>
-                
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -709,73 +664,7 @@ const ContractorBillForm = () => {
                     type="submit"
                     className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
                   >
-                    Create
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      
-      {/* Material Code Creation Modal */}
-      {showMaterialModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">Add New Material Code</h3>
-            <form onSubmit={handleCreateMaterial}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Code <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newMaterial.code}
-                    onChange={(e) => setNewMaterial({...newMaterial, code: e.target.value})}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newMaterial.name}
-                    onChange={(e) => setNewMaterial({...newMaterial, name: e.target.value})}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={newMaterial.description}
-                    onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2"
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowMaterialModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-                  >
-                    Create
+                    Add Contractor
                   </button>
                 </div>
               </div>
