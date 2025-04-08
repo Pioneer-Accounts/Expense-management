@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, Plus, Save, Edit, Trash } from 'lucide-react';
+import { Loader2, Save, Edit, Trash } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import DropdownWithAdd from '../components/DropdownWithAdd';
 
 const ContractorBillForm = () => {
   const { id } = useParams();
@@ -23,16 +26,7 @@ const ContractorBillForm = () => {
   const [jobs, setJobs] = useState([]);
   const [clients, setClients] = useState([]);
   const [contractors, setContractors] = useState([]);
-  const [materialCodes, setMaterialCodes] = useState([
-    { id: 'MC001', name: 'Cement' },
-    { id: 'MC002', name: 'Steel' },
-    { id: 'MC003', name: 'Bricks' },
-    { id: 'MC004', name: 'Sand' },
-    { id: 'MC005', name: 'Aggregate' },
-    { id: 'MC006', name: 'Labor' },
-    { id: 'MC007', name: 'Equipment' },
-    { id: 'MC008', name: 'Other' }
-  ]);
+  const [materialCodes, setMaterialCodes] = useState([]);
   
   const [selectedJob, setSelectedJob] = useState(null);
   const [loading, setLoading] = useState(isEditMode);
@@ -65,6 +59,12 @@ const ContractorBillForm = () => {
         if (!contractorsResponse.ok) throw new Error('Failed to fetch contractors');
         const contractorsData = await contractorsResponse.json();
         setContractors(contractorsData);
+        
+        // Fetch material codes - Add this new API call
+        const materialCodesResponse = await fetch('http://localhost:5000/api/material-codes');
+        if (!materialCodesResponse.ok) throw new Error('Failed to fetch material codes');
+        const materialCodesData = await materialCodesResponse.json();
+        setMaterialCodes(materialCodesData);
         
         if (isEditMode) {
           // Fetch bill details if in edit mode
@@ -171,6 +171,25 @@ const ContractorBillForm = () => {
       setFormData(prev => ({
         ...prev,
         [name]: numValue
+      }));
+    }
+  };
+  
+  // Add this function to handle material code selection
+  const handleMaterialCodeChange = (e) => {
+    const materialCodeId = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      materialCode: materialCodeId
+    }));
+    
+    // Find the selected material code and update related fields
+    const selectedMaterial = materialCodes.find(code => code.id.toString() === materialCodeId.toString());
+    if (selectedMaterial) {
+      setFormData(prev => ({
+        ...prev,
+        materialDescription: selectedMaterial.description || '',
+        unit: selectedMaterial.unit || prev.unit || ''
       }));
     }
   };
@@ -430,15 +449,15 @@ const ContractorBillForm = () => {
                         <select
                           id="materialCode"
                           name="materialCode"
-                          value={formData.materialCode}
-                          onChange={handleChange}
+                          value={formData.materialCode || ""}
+                          onChange={handleMaterialCodeChange}
                           className="w-full rounded-md border border-gray-300 px-3 py-2"
                           required
                         >
                           <option value="">Select material code</option>
                           {materialCodes.map(code => (
                             <option key={code.id} value={code.id}>
-                              {code.id} - {code.name}
+                              {code.code} - {code.description}
                             </option>
                           ))}
                         </select>
@@ -587,7 +606,7 @@ const ContractorBillForm = () => {
                             </>
                           ) : (
                             <>
-                              <Save className="mr-2 h-4 w-4" />
+                              <Save  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"/>
                               Save
                             </>
                           )}

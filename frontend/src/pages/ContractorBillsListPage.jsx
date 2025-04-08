@@ -84,14 +84,15 @@ const ContractorBillsListPage = () => {
   
   const filteredBills = bills.filter(bill => {
     const contractorName = getContractorName(bill.contractorSupplierId).toLowerCase();
-    const jobName = getJobName(bill.jobId)
+    const jobName = getJobName(bill.jobId).toLowerCase();
     const billNo = bill.billNo?.toLowerCase() || '';
-    const search = searchTerm;
-    const date = bill.billDate?.toLowerCase() || '';
+    const search = searchTerm.toLowerCase();
+    const materialInfo = (bill.materialCode || '') + ' ' + (bill.materialDescription || '');
     
     return contractorName.includes(search) || 
            jobName.includes(search) || 
-           billNo.includes(search);
+           billNo.includes(search) ||
+           materialInfo.toLowerCase().includes(search);
   });
   
   return (
@@ -131,13 +132,7 @@ const ContractorBillsListPage = () => {
                   className="pl-10 w-full rounded-md border border-gray-300 px-3 py-2"
                 />
               </div>
-              <button 
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 flex items-center"
-                onClick={() => {/* Export functionality */}}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </button>
+              
             </div>
           </div>
           
@@ -159,6 +154,7 @@ const ContractorBillsListPage = () => {
                     <th className="px-6 py-3 text-left">Contractor</th>
                     <th className="px-6 py-3 text-left">Job</th>
                     <th className="px-6 py-3 text-left">Date</th>
+                    <th className="px-6 py-3 text-left">Material</th>
                     <th className="px-6 py-3 text-right">Amount</th>
                     <th className="px-6 py-3 text-center">Actions</th>
                   </tr>
@@ -169,9 +165,24 @@ const ContractorBillsListPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">{bill.billNo}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{getContractorName(bill.contractorSupplierId)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{getJobName(bill.jobId)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{formatDate(bill.billDate)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{formatDate(bill.date)}</td>
+                      <td className="px-6 py-4">
+                        {bill.materialCode ? (
+                          <div>
+                            <div className="font-medium">{bill.materialCode}</div>
+                            <div className="text-sm text-gray-500">
+                              {bill.materialDescription}
+                              {bill.quantity && bill.unit && (
+                                <span> ({bill.quantity} {bill.unit})</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">No material details</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        ₹{(bill.baseAmount + bill.gst).toFixed(2)}
+                        ₹{parseFloat(bill.baseAmount || 0) + parseFloat(bill.gst || 0).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex justify-center space-x-2">

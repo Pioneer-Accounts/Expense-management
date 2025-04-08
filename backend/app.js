@@ -18,9 +18,9 @@ const contractorPaymentStatusRoutes = require('./routes/contractorPaymentStatusR
 const siteExpenseRoutes = require('./routes/siteExpenseRoutes');
 const siteExpenseRefundRoutes = require('./routes/siteExpenseRefundRoutes');
 const siteExpenseEnquiryRoutes = require('./routes/siteExpenseEnquiryRoutes');
+const materialCodeRoutes = require('./routes/materialCodeRoutes');
 // Import routes
 const contractorRoutes = require('./routes/contractorRoutes');
-
 const app = express();
 
 // Middleware
@@ -46,6 +46,7 @@ app.use('/api/contractor-payment-status', contractorPaymentStatusRoutes);
 app.use('/api/site-expenses', siteExpenseRoutes);
 app.use('/api/site-expense-refunds', siteExpenseRefundRoutes);
 app.use('/api/site-expense-enquiries', siteExpenseEnquiryRoutes);
+app.use('/api/material-codes', materialCodeRoutes);
 
 // Use routes
 app.use('/api/contractors', contractorRoutes);

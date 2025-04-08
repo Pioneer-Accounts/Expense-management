@@ -189,4 +189,16 @@ const HomePage = () => {
   );
 };
 
+// Add this card to the grid in the HomePage component:
+<div className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow card-hover">
+  <h3 className="text-lg font-semibold mb-2">Material Codes</h3>
+  <p className="text-gray-600 mb-4">Manage material codes for contractor bills</p>
+  <Button 
+    onClick={() => navigate('/material-codes')}
+    className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700"
+  >
+    View Material Codes
+  </Button>
+</div>
+
 export default HomePage;
