@@ -37,7 +37,7 @@ const ContractorBillForm = () => {
   const [showContractorModal, setShowContractorModal] = useState(false);
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [newContractor, setNewContractor] = useState({ name: '', code: '', contactPerson: '', phone: '' });
-  const [newMaterial, setNewMaterial] = useState({ code: '', name: '', description: '' });
+  const [newMaterial, setNewMaterial] = useState({ code: '', description: '', unit: '' });
   
   useEffect(() => {
     const fetchData = async () => {
@@ -313,7 +313,7 @@ const ContractorBillForm = () => {
         materialCode: newMaterialWithId.id
       }));
       setShowMaterialModal(false);
-      setNewMaterial({ code: '', name: '', description: '' });
+      setNewMaterial({ code: '', description: '', unit: '' });
     } catch (err) {
       alert(err.message || 'Failed to create material code');
     }
@@ -339,6 +339,8 @@ const ContractorBillForm = () => {
       </div>
     );
   }
+  
+
   
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -461,13 +463,14 @@ const ContractorBillForm = () => {
                             </option>
                           ))}
                         </select>
-                        <button
-                          type="button"
-                          onClick={() => setShowMaterialModal(true)}
-                          className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                        >
-                          <Plus className="h-5 w-5" />
-                        </button>
+                        <Link to="/material-codes/new" >
+                          <button
+                            type="button"
+                            className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+                          >
+                            <Plus className="h-5 w-5" />
+                          </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
