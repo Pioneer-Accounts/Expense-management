@@ -228,3 +228,36 @@ exports.deleteContractorBill = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete contractor bill' });
   }
 };
+
+// Get contractors for a specific job
+exports.getContractorsForJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    // Find all contractor bills for this job
+    const contractorBills = await prisma.contractorBill.findMany({
+      where: {
+        jobId: parseInt(jobId)
+      },
+      include: {
+        contractorSupplier: true
+      }
+    });
+    
+    // Extract unique contractors
+    const uniqueContractors = [];
+    const contractorIds = new Set();
+    
+    contractorBills.forEach(bill => {
+      if (!contractorIds.has(bill.contractorSupplierId)) {
+        contractorIds.add(bill.contractorSupplierId);
+        uniqueContractors.push(bill.contractorSupplier);
+      }
+    });
+    
+    res.status(200).json(uniqueContractors);
+  } catch (error) {
+    console.error('Error fetching contractors for job:', error);
+    res.status(500).json({ error: 'Failed to fetch contractors for job' });
+  }
+};

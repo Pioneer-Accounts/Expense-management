@@ -166,7 +166,7 @@ const ContractorPaymentsListPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">{getPaymentModeName(payment.paymentMode)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{payment.referenceNo || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        ₹{payment.amount.toFixed(2)}
+                        ₹{payment.amount}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex justify-center space-x-2">

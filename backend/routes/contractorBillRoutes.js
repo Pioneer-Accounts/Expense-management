@@ -8,6 +8,9 @@ router.get('/', contractorBillController.getAllContractorBills);
 // GET contractor bill by ID
 router.get('/:id', contractorBillController.getContractorBillById);
 
+// GET contractors for a specific job
+router.get('/job/:jobId/contractors', contractorBillController.getContractorsForJob);
+
 // POST create new contractor bill
 router.post('/', contractorBillController.createContractorBill);
 
