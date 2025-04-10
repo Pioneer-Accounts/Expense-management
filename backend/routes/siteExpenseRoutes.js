@@ -2,19 +2,22 @@ const express = require('express');
 const router = express.Router();
 const siteExpenseController = require('../controllers/siteExpenseController');
 
-// GET all site expenses
+// Get all site expenses
 router.get('/', siteExpenseController.getAllSiteExpenses);
 
-// GET site expense by ID
+// Get site expense by ID
 router.get('/:id', siteExpenseController.getSiteExpenseById);
 
-// POST create new site expense
+// Create new site expense
 router.post('/', siteExpenseController.createSiteExpense);
 
-// PUT update site expense
+// Update site expense
 router.put('/:id', siteExpenseController.updateSiteExpense);
 
-// DELETE site expense
+// Delete site expense
 router.delete('/:id', siteExpenseController.deleteSiteExpense);
+
+// Get site expenses by job ID
+router.get('/job/:jobId', siteExpenseController.getSiteExpensesByJobId);
 
 module.exports = router;

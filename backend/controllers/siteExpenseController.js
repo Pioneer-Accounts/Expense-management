@@ -8,10 +8,13 @@ exports.getAllSiteExpenses = async (req, res) => {
       include: {
         job: true,
         client: true,
-        refunds: true
+        refund: true
+      },
+      orderBy: {
+        paymentDate: 'desc'
       }
     });
-    res.status(200).json(siteExpenses);
+    res.json(siteExpenses);
   } catch (error) {
     console.error('Error fetching site expenses:', error);
     res.status(500).json({ error: 'Failed to fetch site expenses' });
@@ -27,7 +30,7 @@ exports.getSiteExpenseById = async (req, res) => {
       include: {
         job: true,
         client: true,
-        refunds: true
+        refund: true
       }
     });
     
@@ -35,96 +38,192 @@ exports.getSiteExpenseById = async (req, res) => {
       return res.status(404).json({ error: 'Site expense not found' });
     }
     
-    res.status(200).json(siteExpense);
+    res.json(siteExpense);
   } catch (error) {
     console.error('Error fetching site expense:', error);
     res.status(500).json({ error: 'Failed to fetch site expense' });
   }
 };
 
-// Create a new site expense
+// Create new site expense
 exports.createSiteExpense = async (req, res) => {
   try {
-    const { jobId, clientId, siteId, paymentDate, campOrName, amount } = req.body;
+    const { 
+      jobId, 
+      clientId, 
+      siteId, 
+      paymentDate, 
+      amount, 
+      hasRefund, 
+      refundFromSite, 
+      refundDate, 
+      refundAmount 
+    } = req.body;
     
-    const newSiteExpense = await prisma.siteExpense.create({
-      data: {
-        siteId,
-        paymentDate: new Date(paymentDate),
-        campOrName,
-        amount,
-        job: {
-          connect: { id: parseInt(jobId) }
-        },
-        client: {
-          connect: { id: parseInt(clientId) }
+    // Start a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create site expense
+      const siteExpense = await prisma.siteExpense.create({
+        data: {
+          jobId: parseInt(jobId),
+          clientId: parseInt(clientId),
+          siteId,
+          paymentDate: new Date(paymentDate),
+          amount: parseFloat(amount),
         }
-      },
-      include: {
-        job: true,
-        client: true
+      });
+      
+      // Create refund if needed
+      if (hasRefund) {
+        await prisma.siteExpenseRefund.create({
+          data: {
+            siteExpenseId: siteExpense.id,
+            refundFromSite: refundFromSite || null,
+            refundDate: refundDate ? new Date(refundDate) : null,
+            amount: refundAmount ? parseFloat(refundAmount) : 0,
+          }
+        });
       }
+      
+      // Return the created site expense with its refund
+      return await prisma.siteExpense.findUnique({
+        where: { id: siteExpense.id },
+        include: {
+          job: true,
+          client: true,
+          refund: true
+        }
+      });
     });
     
-    res.status(201).json(newSiteExpense);
+    res.status(201).json(result);
   } catch (error) {
     console.error('Error creating site expense:', error);
     res.status(500).json({ error: 'Failed to create site expense' });
   }
 };
 
-// Update a site expense
+// Update site expense
 exports.updateSiteExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    const { jobId, clientId, siteId, paymentDate, campOrName, amount } = req.body;
+    const { 
+      jobId, 
+      clientId, 
+      siteId, 
+      paymentDate, 
+      amount, 
+      hasRefund, 
+      refundFromSite, 
+      refundDate, 
+      refundAmount 
+    } = req.body;
     
-    const updatedSiteExpense = await prisma.siteExpense.update({
-      where: { id: parseInt(id) },
-      data: {
-        siteId,
-        paymentDate: paymentDate ? new Date(paymentDate) : undefined,
-        campOrName,
-        amount,
-        job: jobId ? {
-          connect: { id: parseInt(jobId) }
-        } : undefined,
-        client: clientId ? {
-          connect: { id: parseInt(clientId) }
-        } : undefined
-      },
-      include: {
-        job: true,
-        client: true,
-        refunds: true
+    // Start a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Update site expense
+      const updatedSiteExpense = await prisma.siteExpense.update({
+        where: { id: parseInt(id) },
+        data: {
+          jobId: parseInt(jobId),
+          clientId: parseInt(clientId),
+          siteId,
+          paymentDate: new Date(paymentDate),
+          amount: parseFloat(amount),
+        }
+      });
+      
+      // Check if refund exists
+      const existingRefund = await prisma.siteExpenseRefund.findUnique({
+        where: { siteExpenseId: parseInt(id) }
+      });
+      
+      if (hasRefund) {
+        // If refund exists, update it; otherwise create it
+        if (existingRefund) {
+          await prisma.siteExpenseRefund.update({
+            where: { id: existingRefund.id },
+            data: {
+              refundFromSite: refundFromSite || null,
+              refundDate: refundDate ? new Date(refundDate) : null,
+              amount: refundAmount ? parseFloat(refundAmount) : 0,
+            }
+          });
+        } else {
+          await prisma.siteExpenseRefund.create({
+            data: {
+              siteExpenseId: parseInt(id),
+              refundFromSite: refundFromSite || null,
+              refundDate: refundDate ? new Date(refundDate) : null,
+              amount: refundAmount ? parseFloat(refundAmount) : 0,
+            }
+          });
+        }
+      } else if (existingRefund) {
+        // If hasRefund is false but a refund exists, delete it
+        await prisma.siteExpenseRefund.delete({
+          where: { id: existingRefund.id }
+        });
       }
+      
+      // Return the updated site expense with its refund
+      return await prisma.siteExpense.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          job: true,
+          client: true,
+          refund: true
+        }
+      });
     });
     
-    res.status(200).json(updatedSiteExpense);
+    res.json(result);
   } catch (error) {
     console.error('Error updating site expense:', error);
     res.status(500).json({ error: 'Failed to update site expense' });
   }
 };
 
-// Delete a site expense
+// Delete site expense
 exports.deleteSiteExpense = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // First delete related refunds
-    await prisma.siteExpenseRefund.deleteMany({
-      where: { siteExpenseId: parseInt(id) }
+    // Start a transaction
+    await prisma.$transaction(async (prisma) => {
+      // First delete any associated refund
+      await prisma.siteExpenseRefund.deleteMany({
+        where: { siteExpenseId: parseInt(id) }
+      });
+      
+      // Then delete the site expense
+      await prisma.siteExpense.delete({
+        where: { id: parseInt(id) }
+      });
     });
     
-    // Then delete the site expense
-    await prisma.siteExpense.delete({
-      where: { id: parseInt(id) }
-    });
-    
-    res.status(204).send();
+    res.json({ message: 'Site expense deleted successfully' });
   } catch (error) {
     console.error('Error deleting site expense:', error);
     res.status(500).json({ error: 'Failed to delete site expense' });
+  }
+};
+
+// Get site expenses by job ID
+exports.getSiteExpensesByJobId = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const siteExpenses = await prisma.siteExpense.findMany({
+      where: { jobId: parseInt(jobId) },
+      include: {
+        job: true,
+        client: true,
+        refund: true
+      }
+    });
+    res.json(siteExpenses);
+  } catch (error) {
+    console.error('Error fetching site expenses by job ID:', error);
+    res.status(500).json({ error: 'Failed to fetch site expenses' });
   }
 };

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, MapPin, Users, Briefcase } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [expensesDropdownOpen, setExpensesDropdownOpen] = useState(false);
+  const [clientsDropdownOpen, setClientsDropdownOpen] = useState(false);
   const [contractorDropdownOpen, setContractorDropdownOpen] = useState(false);
+  const [siteExpenseDropdownOpen, setSiteExpenseDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -17,12 +18,16 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleExpensesDropdown = () => {
-    setExpensesDropdownOpen(!expensesDropdownOpen);
+  const toggleClientsDropdown = () => {
+    setClientsDropdownOpen(!clientsDropdownOpen);
   };
 
   const toggleContractorDropdown = () => {
     setContractorDropdownOpen(!contractorDropdownOpen);
+  };
+
+  const toggleSiteExpenseDropdown = () => {
+    setSiteExpenseDropdownOpen(!siteExpenseDropdownOpen);
   };
 
   return (
@@ -37,53 +42,58 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-              Home
-            </Link>
             <Link to="/jobs" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
               Jobs
-            </Link>
-            <Link to="/clients" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-              Clients
             </Link>
             <Link to="/companies" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
               Companies
             </Link>
-            <Link to="/contractors/new" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-              Contractor/Suppliers
-            </Link>
             
-            {/* Expenses Dropdown */}
+            {/* Clients Dropdown */}
             <div className="relative">
               <button 
                 className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
-                onClick={toggleExpensesDropdown}
+                onClick={toggleClientsDropdown}
               >
-                Client
+                <Users className="h-4 w-4 mr-1" />
+                Clients
                 <ChevronDown className="h-4 w-4 ml-1" />
               </button>
               
-              
-              {expensesDropdownOpen && (
+              {clientsDropdownOpen && (
                 <div className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-700">
+                  <Link 
+                    to="/clients" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setClientsDropdownOpen(false)}
+                  >
+                    All Clients
+                  </Link>
+                  <Link 
+                    to="/clients/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setClientsDropdownOpen(false)}
+                  >
+                    Add New Client
+                  </Link>
                   <Link 
                     to="/expenses/bills" 
                     className="block px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setExpensesDropdownOpen(false)}
+                    onClick={() => setClientsDropdownOpen(false)}
                   >
                     Client Bills
                   </Link>
                   <Link 
                     to="/expenses/bills/new" 
                     className="block px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setExpensesDropdownOpen(false)}
+                    onClick={() => setClientsDropdownOpen(false)}
                   >
                     New Bill Entry
                   </Link>
                   <Link 
                     to="/payments/receipts/new" 
                     className="block px-4 py-2 hover:bg-gray-100"
-                    onClick={() => setExpensesDropdownOpen(false)}
+                    onClick={() => setClientsDropdownOpen(false)}
                   >
                     Payment Receipts
                   </Link>
@@ -97,12 +107,20 @@ const Navbar = () => {
                 className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
                 onClick={toggleContractorDropdown}
               >
+                <Briefcase className="h-4 w-4 mr-1" />
                 Contractor
                 <ChevronDown className="h-4 w-4 ml-1" />
               </button>
               
               {contractorDropdownOpen && (
                 <div className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-700">
+                  <Link 
+                    to="/contractors/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    Add Contractor/Supplier
+                  </Link>
                   <Link 
                     to="/contractor-bills" 
                     className="block px-4 py-2 hover:bg-gray-100"
@@ -130,6 +148,37 @@ const Navbar = () => {
                     onClick={() => setContractorDropdownOpen(false)}
                   >
                     New Payment
+                  </Link>
+                </div>
+              )}
+            </div>
+            
+            {/* Site Expense Dropdown */}
+            <div className="relative">
+              <button 
+                className="px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center"
+                onClick={toggleSiteExpenseDropdown}
+              >
+                <MapPin className="h-4 w-4 mr-1" />
+                Site Expense
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </button>
+              
+              {siteExpenseDropdownOpen && (
+                <div className="absolute z-10 mt-2 w-48 bg-white rounded-md shadow-lg py-1 text-gray-700">
+                  <Link 
+                    to="/site-expenses" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setSiteExpenseDropdownOpen(false)}
+                  >
+                    All Site Expenses
+                  </Link>
+                  <Link 
+                    to="/site-expenses/new" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setSiteExpenseDropdownOpen(false)}
+                  >
+                    New Site Expense
                   </Link>
                 </div>
               )}
@@ -169,34 +218,42 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4">
             <div className="flex flex-col space-y-2">
-              <Link to="/" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-                Home
-              </Link>
               <Link to="/jobs" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Jobs
-              </Link>
-              <Link to="/clients" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-                Clients
               </Link>
               <Link to="/companies" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
                 Companies
               </Link>
-              <Link to="/contractors/new" className="px-3 py-2 rounded hover:bg-white/10 transition-colors">
-                Contractor
-              </Link>
               
-              {/* Mobile Expenses Menu */}
+              {/* Mobile Clients Menu */}
               <div>
                 <button
                   className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
-                  onClick={() => setExpensesDropdownOpen(!expensesDropdownOpen)}
+                  onClick={() => setClientsDropdownOpen(!clientsDropdownOpen)}
                 >
-                  <span>Client</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${expensesDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className="flex items-center">
+                    <Users className="h-4 w-4 mr-1" />
+                    Clients
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${clientsDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
-                {expensesDropdownOpen && (
+                {clientsDropdownOpen && (
                   <div className="pl-4 mt-1 border-l-2 border-white/20 ml-3">
+                    <Link
+                      to="/clients"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      All Clients
+                    </Link>
+                    <Link
+                      to="/clients/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Add New Client
+                    </Link>
                     <Link
                       to="/expenses/bills"
                       className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
@@ -228,12 +285,22 @@ const Navbar = () => {
                   className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
                   onClick={() => setContractorDropdownOpen(!contractorDropdownOpen)}
                 >
-                  <span>Contractor</span>
+                  <span className="flex items-center">
+                    <Briefcase className="h-4 w-4 mr-1" />
+                    Contractor
+                  </span>
                   <ChevronDown className={`h-4 w-4 transition-transform ${contractorDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 {contractorDropdownOpen && (
                   <div className="pl-4 mt-1 border-l-2 border-white/20 ml-3">
+                    <Link
+                      to="/contractors/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Add Contractor/Supplier
+                    </Link>
                     <Link
                       to="/contractor-bills"
                       className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
@@ -261,6 +328,39 @@ const Navbar = () => {
                       onClick={toggleMenu}
                     >
                       New Payment
+                    </Link>
+                  </div>
+                )}
+              </div>
+              
+              {/* Mobile Site Expense Menu */}
+              <div>
+                <button
+                  className="w-full text-left px-3 py-2 rounded hover:bg-white/10 transition-colors flex items-center justify-between"
+                  onClick={() => setSiteExpenseDropdownOpen(!siteExpenseDropdownOpen)}
+                >
+                  <span className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    Site Expense
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${siteExpenseDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {siteExpenseDropdownOpen && (
+                  <div className="pl-4 mt-1 border-l-2 border-white/20 ml-3">
+                    <Link
+                      to="/site-expenses"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      All Site Expenses
+                    </Link>
+                    <Link
+                      to="/site-expenses/new"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      New Site Expense
                     </Link>
                   </div>
                 )}

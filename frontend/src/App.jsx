@@ -28,7 +28,9 @@ import ContractorPaymentForm from "./pages/ContractorPaymentForm";
 import ContractorForm from "./pages/ContractorForm";
 import MaterialCodeListPage from "./pages/MaterialCodeListPage";
 import MaterialCodeForm from './pages/MaterialCodeForm';
-
+import SiteExpenseListPage from './pages/SiteExpenseListPage';
+import SiteExpenseForm from './pages/SiteExpenseForm';
+import SiteExpenseDetailPage from './pages/SiteExpenseDetailPage';
 
 function AppRoutes() {
   return (
@@ -244,6 +246,43 @@ function AppRoutes() {
         }
       />
 
+      {/* Site Expense Routes */}
+      <Route
+        path="/site-expenses"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseListPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/site-expenses/new"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseForm />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/site-expenses/:id"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/site-expenses/:id/edit"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseForm />
+          </ProtectedRoute>
+        }
+      />
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

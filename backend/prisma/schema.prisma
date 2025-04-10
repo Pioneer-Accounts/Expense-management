@@ -212,30 +212,31 @@ model ContractorPaymentStatus {
   updatedAt             DateTime                 @updatedAt
 }
 
+// Add these models to your existing schema.prisma file
+
 model SiteExpense {
-  id                    Int                      @id @default(autoincrement())
-  jobId                 Int
-  job                   Job                      @relation(fields: [jobId], references: [id])
-  clientId              Int
-  client                Client                   @relation(fields: [clientId], references: [id])
-  siteId                String
-  paymentDate           DateTime
-  campOrName            String                   // Camp / Name field
-  amount                Float
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
-  refunds               SiteExpenseRefund[]
+  id          Int                @id @default(autoincrement())
+  jobId       Int
+  job         Job                @relation(fields: [jobId], references: [id])
+  clientId    Int
+  client      Client             @relation(fields: [clientId], references: [id])
+  siteId      String
+  paymentDate DateTime
+  amount      Float
+  refund      SiteExpenseRefund?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 model SiteExpenseRefund {
-  id                    Int                      @id @default(autoincrement())
-  siteExpenseId         Int
-  siteExpense           SiteExpense              @relation(fields: [siteExpenseId], references: [id])
-  refundDate            DateTime
-  campOrName            String
-  amount                Float
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
+  id             Int         @id @default(autoincrement())
+  siteExpenseId  Int         @unique
+  siteExpense    SiteExpense @relation(fields: [siteExpenseId], references: [id])
+  refundFromSite String?
+  refundDate     DateTime?
+  amount         Float       @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model SiteExpenseEnquiry {

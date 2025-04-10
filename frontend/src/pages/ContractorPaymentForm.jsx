@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, Edit, Trash, Plus } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { Link } from 'react-router-dom';
+import DropdownWithAdd from '../components/DropdownWithAdd';
 
 const ContractorPaymentForm = () => {
   const { id } = useParams();
@@ -25,7 +26,7 @@ const ContractorPaymentForm = () => {
       { type: 'SD_RETENTION', amount: 0 },
       { type: 'OTHER', amount: 0 }
     ],
-    remarks: ''
+    // remarks: ''
   });
   
   const [jobs, setJobs] = useState([]);
@@ -102,7 +103,7 @@ const ContractorPaymentForm = () => {
               { type: 'SD_RETENTION', amount: 0 },
               { type: 'OTHER', amount: 0 }
             ],
-        remarks: paymentData.remarks || ''
+        // remarks: paymentData.remarks || ''
       });
       
       // Fetch job contractors if job is selected
@@ -255,7 +256,7 @@ const ContractorPaymentForm = () => {
             type: d.type,
             amount: parseFloat(d.amount)
           })),
-        remarks: formData.remarks || ''
+        // remarks: formData.remarks || ''
       };
       
       const url = isEditMode 
@@ -423,7 +424,7 @@ const ContractorPaymentForm = () => {
                       <option value="">Select a bill</option>
                       {contractorBills.map(bill => (
                         <option key={bill.id} value={bill.id}>
-                          {bill.billNo} - ₹{bill.amount.toFixed(2)} ({new Date(bill.date).toLocaleDateString()})
+                          {bill.billNo} - ₹{bill.totalAmount?.toFixed(2) || (bill.baseAmount + bill.gst).toFixed(2)} ({new Date(bill.billDate).toLocaleDateString()})
                         </option>
                       ))}
                     </select>
@@ -467,17 +468,18 @@ const ContractorPaymentForm = () => {
                     </div>
                     
                     {(formData.paymentMode === 'cheque' || formData.paymentMode === 'dd') && (
-                      <div className="space-y-2 md:col-span-2">
+                      <div className="space-y-2">
                         <label htmlFor="chequeOrDdNo" className="block text-sm font-medium">
-                          {formData.paymentMode === 'cheque' ? 'Cheque No' : 'DD No'} <span className="text-red-500">*</span>
+                          {formData.paymentMode === 'cheque' ? 'Cheque Number' : 'DD Number'} <span className="text-red-500">*</span>
                         </label>
                         <input
                           id="chequeOrDdNo"
                           name="chequeOrDdNo"
+                          type="text"
                           value={formData.chequeOrDdNo}
                           onChange={handleChange}
                           className="w-full rounded-md border border-gray-300 px-3 py-2"
-                          required={formData.paymentMode === 'cheque' || formData.paymentMode === 'dd'}
+                          required
                         />
                       </div>
                     )}
@@ -503,7 +505,7 @@ const ContractorPaymentForm = () => {
                     
                     <div className="space-y-2">
                       <label htmlFor="gst" className="block text-sm font-medium">
-                        GST
+                        GST Amount
                       </label>
                       <input
                         id="gst"
@@ -523,11 +525,11 @@ const ContractorPaymentForm = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="tds" className="block text-sm font-medium">
+                        <label htmlFor="itTds" className="block text-sm font-medium">
                           Income Tax TDS
                         </label>
                         <input
-                          id="tds"
+                          id="itTds"
                           type="number"
                           step="0.01"
                           value={formData.deductions[0].amount}
@@ -580,7 +582,7 @@ const ContractorPaymentForm = () => {
                     </div>
                   </div>
                   
-                  {/* Remarks */}
+                  {/* Remarks
                   <div className="space-y-2">
                     <label htmlFor="remarks" className="block text-sm font-medium">
                       Remarks
@@ -593,7 +595,7 @@ const ContractorPaymentForm = () => {
                       rows="2"
                       className="w-full rounded-md border border-gray-300 px-3 py-2"
                     />
-                  </div>
+                  </div> */}
                   
                   {/* Summary */}
                   <div className="mt-6 p-4 bg-gray-50 rounded-md">

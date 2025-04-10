@@ -17,4 +17,10 @@ router.put('/:id', contractorPaymentController.updateContractorPayment);
 // DELETE contractor payment
 router.delete('/:id', contractorPaymentController.deleteContractorPayment);
 
+// Add these routes to your existing routes file
+router.get('/contractor/:contractorId', contractorPaymentController.getPaymentsByContractor);
+router.get('/job/:jobId', contractorPaymentController.getPaymentsByJob);
+router.get('/summary', contractorPaymentController.getPaymentSummary);
+router.get('/recent', contractorPaymentController.getRecentPayments);
+
 module.exports = router;
