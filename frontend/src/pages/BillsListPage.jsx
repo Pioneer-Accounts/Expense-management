@@ -7,28 +7,72 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 
 const BillsListPage = () => {
   const [bills, setBills] = useState([]);
+  const [paymentSummary, setPaymentSummary] = useState({
+    totalBilled: 0,
+    totalPaid: 0,
+    totalDue: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
   useEffect(() => {
-    const fetchBills = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/client-bills');
-        if (!response.ok) {
+        setLoading(true);
+        
+        // Fetch client bills
+        const billsResponse = await fetch('http://localhost:5000/api/client-bills');
+        if (!billsResponse.ok) {
           throw new Error('Failed to fetch bills');
         }
-        const data = await response.json();
-        setBills(data);
+        const billsData = await billsResponse.json();
+        setBills(billsData);
+        
+        // Fetch payment receipts
+        const receiptsResponse = await fetch('http://localhost:5000/api/payment-receipts');
+        if (!receiptsResponse.ok) {
+          throw new Error('Failed to fetch payment receipts');
+        }
+        const receiptsData = await receiptsResponse.json();
+        
+        // Calculate totals
+        const totalBilled = billsData.reduce((sum, bill) => sum + bill.amount, 0);
+        
+        // Calculate total paid amount from receipts
+        const totalPaid = receiptsData.reduce((sum, receipt) => {
+          const receiptTotal = receipt.baseAmount + receipt.gst;
+          const deductionsTotal = receipt.deductions ? 
+            receipt.deductions.reduce((dSum, d) => dSum + d.amount, 0) : 0;
+          return sum + (receiptTotal - deductionsTotal);
+        }, 0);
+        
+        // Calculate total due
+        const totalDue = totalBilled - totalPaid;
+        
+        setPaymentSummary({
+          totalBilled,
+          totalPaid,
+          totalDue
+        });
       } catch (err) {
-        setError('Failed to load bills');
+        setError('Failed to load data');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     
-    fetchBills();
+    fetchData();
   }, []);
+  
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
   
   if (loading) {
     return (
@@ -62,6 +106,29 @@ const BillsListPage = () => {
             <span>{error}</span>
           </div>
         )}
+        
+        {/* Payment Summary Card */}
+        <Card className="mb-6">
+          <CardHeader className="bg-gradient-to-r from-green-500/10 to-emerald-600/10 pb-4">
+            <CardTitle>Payment Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-600 font-medium">Total Billed Amount</p>
+                <p className="text-2xl font-bold text-blue-800">{formatCurrency(paymentSummary.totalBilled)}</p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <p className="text-sm text-green-600 font-medium">Total Paid Amount</p>
+                <p className="text-2xl font-bold text-green-800">{formatCurrency(paymentSummary.totalPaid)}</p>
+              </div>
+              <div className="p-4 bg-amber-50 rounded-lg">
+                <p className="text-sm text-amber-600 font-medium">Total Due Amount</p>
+                <p className="text-2xl font-bold text-amber-800">{formatCurrency(paymentSummary.totalDue)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
         <Card>
           <CardHeader className="bg-gradient-to-r from-sky-500/10 to-indigo-600/10 pb-4">
@@ -115,13 +182,13 @@ const BillsListPage = () => {
                           {bill.job?.jobNo || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {bill.job?.client?.name || 'N/A'}
+                          {bill.client.name || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {new Date(bill.date).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          ₹ {bill.amount.toFixed(2)}
+                          {formatCurrency(bill.amount)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
@@ -143,6 +210,17 @@ const BillsListPage = () => {
                     ))
                   )}
                 </tbody>
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan="5" className="px-6 py-4 text-right font-medium">
+                      Total:
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-bold">
+                      {formatCurrency(paymentSummary.totalBilled)}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </CardContent>

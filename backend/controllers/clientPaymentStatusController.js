@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all client payment statuses
+// Get all client payment statuses with additional job and bill information
 exports.getAllClientPaymentStatuses = async (req, res) => {
   try {
     const clientPaymentStatuses = await prisma.clientPaymentStatus.findMany({
@@ -9,11 +9,61 @@ exports.getAllClientPaymentStatuses = async (req, res) => {
         job: true,
         client: true,
         bill: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
-    res.status(200).json(clientPaymentStatuses);
+    
+    // Calculate totals
+    const totalAmountPaid = clientPaymentStatuses.reduce((sum, status) => sum + status.amountPaid, 0);
+    const totalBalanceDue = clientPaymentStatuses.reduce((sum, status) => sum + status.balanceDue, 0);
+    
+    res.status(200).json({
+      paymentStatuses: clientPaymentStatuses,
+      totals: {
+        amountPaid: totalAmountPaid,
+        balanceDue: totalBalanceDue
+      }
+    });
   } catch (error) {
     console.error('Error fetching client payment statuses:', error);
+    res.status(500).json({ error: 'Failed to fetch client payment statuses' });
+  }
+};
+
+// Get client payment statuses by job ID
+exports.getClientPaymentStatusesByJobId = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    const clientPaymentStatuses = await prisma.clientPaymentStatus.findMany({
+      where: {
+        jobId: parseInt(jobId)
+      },
+      include: {
+        job: true,
+        client: true,
+        bill: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    // Calculate totals
+    const totalAmountPaid = clientPaymentStatuses.reduce((sum, status) => sum + status.amountPaid, 0);
+    const totalBalanceDue = clientPaymentStatuses.reduce((sum, status) => sum + status.balanceDue, 0);
+    
+    res.status(200).json({
+      paymentStatuses: clientPaymentStatuses,
+      totals: {
+        amountPaid: totalAmountPaid,
+        balanceDue: totalBalanceDue
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching client payment statuses by job ID:', error);
     res.status(500).json({ error: 'Failed to fetch client payment statuses' });
   }
 };

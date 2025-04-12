@@ -46,6 +46,8 @@ app.use('/api/site-expense-enquiries', siteExpenseEnquiryRoutes);
 app.use('/api/material-codes', materialCodeRoutes);
 app.use('/api/contractors', contractorRoutes);
 
+app.use('api/client-payment-statuses', contractorRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

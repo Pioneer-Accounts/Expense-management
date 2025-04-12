@@ -32,6 +32,9 @@ import SiteExpenseListPage from './pages/SiteExpenseListPage';
 import SiteExpenseForm from './pages/SiteExpenseForm';
 import SiteExpenseDetailPage from './pages/SiteExpenseDetailPage';
 
+// Add this import
+import ClientPaymentStatusPage from './pages/ClientPaymentStatusPage';
+
 function AppRoutes() {
   return (
     <Routes>
@@ -279,6 +282,25 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SiteExpenseForm />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Add these new routes */}
+      <Route
+        path="/client-payment-status"
+        element={
+          <ProtectedRoute>
+            <ClientPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/client-payment-status/job/:jobId"
+        element={
+          <ProtectedRoute>
+            <ClientPaymentStatusPage />
           </ProtectedRoute>
         }
       />

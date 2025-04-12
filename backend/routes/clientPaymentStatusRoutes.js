@@ -5,6 +5,9 @@ const clientPaymentStatusController = require('../controllers/clientPaymentStatu
 // GET all client payment statuses
 router.get('/', clientPaymentStatusController.getAllClientPaymentStatuses);
 
+// GET client payment statuses by job ID
+router.get('/job/:jobId', clientPaymentStatusController.getClientPaymentStatusesByJobId);
+
 // GET client payment status by ID
 router.get('/:id', clientPaymentStatusController.getClientPaymentStatusById);
 
