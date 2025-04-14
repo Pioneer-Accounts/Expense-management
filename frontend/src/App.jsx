@@ -34,6 +34,7 @@ import SiteExpenseDetailPage from './pages/SiteExpenseDetailPage';
 
 // Add this import
 import ClientPaymentStatusPage from './pages/ClientPaymentStatusPage';
+import ContractorPaymentStatusPage from "./pages/ContractorPaymentStatusPage";
 
 function AppRoutes() {
   return (
@@ -301,6 +302,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ClientPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/contractor-payment-status"
+        element={
+          <ProtectedRoute>
+            <ContractorPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+
+<Route
+        path="/contractor-payment-status/:jobId"
+        element={
+          <ProtectedRoute>
+            <ContractorPaymentStatusPage />
           </ProtectedRoute>
         }
       />

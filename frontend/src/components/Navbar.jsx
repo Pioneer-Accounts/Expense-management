@@ -157,6 +157,13 @@ const Navbar = () => {
                   >
                     New Payment
                   </Link>
+                  <Link 
+                    to="/contractor-payment-status" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setContractorDropdownOpen(false)}
+                  >
+                    Contractor Payment Status
+                  </Link>
                 </div>
               )}
             </div>
@@ -336,6 +343,13 @@ const Navbar = () => {
                       onClick={toggleMenu}
                     >
                       New Payment
+                    </Link>
+                    <Link
+                      to="/contractor-payment-status"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Contractor Payment Status
                     </Link>
                   </div>
                 )}
