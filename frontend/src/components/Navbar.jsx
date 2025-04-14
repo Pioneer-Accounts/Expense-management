@@ -97,6 +97,14 @@ const Navbar = () => {
                   >
                     Payment Receipts
                   </Link>
+
+                  <Link 
+                    to="/client-payment-status" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setClientsDropdownOpen(false)}
+                  >
+                    Client Payment Status
+                  </Link>
                 </div>
               )}
             </div>

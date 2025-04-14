@@ -7,6 +7,8 @@ import Navbar from '../components/Navbar';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const ClientPaymentStatusPage = () => {
   const [paymentStatuses, setPaymentStatuses] = useState([]);
@@ -209,6 +211,193 @@ const ClientPaymentStatusPage = () => {
     );
   }
 
+  // Add this new function for Excel export
+  const handleExportToExcel = async () => {
+    // Create a new workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Payment Status');
+    
+    // Add title with date
+    worksheet.mergeCells('A1:G1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = jobId 
+      ? `Payment Status for Job #${jobId}` 
+      : 'Client Payment Status Report';
+    titleCell.font = {
+      size: 16,
+      bold: true,
+      color: { argb: '4F4F4F' }
+    };
+    titleCell.alignment = { horizontal: 'center' };
+    
+    // Add export date
+    worksheet.mergeCells('A2:G2');
+    const dateCell = worksheet.getCell('A2');
+    dateCell.value = `Generated on: ${new Date().toLocaleDateString()}`;
+    dateCell.font = { italic: true };
+    dateCell.alignment = { horizontal: 'center' };
+    
+    // Add summary section
+    worksheet.mergeCells('A4:G4');
+    worksheet.getCell('A4').value = 'Summary';
+    worksheet.getCell('A4').font = { bold: true, size: 14 };
+    
+    worksheet.mergeCells('A5:B5');
+    worksheet.getCell('A5').value = 'Total Bill Value:';
+    worksheet.getCell('A5').font = { bold: true };
+    
+    worksheet.mergeCells('C5:D5');
+    worksheet.getCell('C5').value = totals.amountPaid + totals.balanceDue;
+    worksheet.getCell('C5').numFmt = '₹#,##0.00';
+    
+    worksheet.mergeCells('A6:B6');
+    worksheet.getCell('A6').value = 'Total Amount Paid:';
+    worksheet.getCell('A6').font = { bold: true };
+    
+    worksheet.mergeCells('C6:D6');
+    worksheet.getCell('C6').value = totals.amountPaid;
+    worksheet.getCell('C6').numFmt = '₹#,##0.00';
+    
+    worksheet.mergeCells('A7:B7');
+    worksheet.getCell('A7').value = 'Total Balance Due:';
+    worksheet.getCell('A7').font = { bold: true };
+    
+    worksheet.mergeCells('C7:D7');
+    worksheet.getCell('C7').value = totals.balanceDue;
+    worksheet.getCell('C7').numFmt = '₹#,##0.00';
+    
+    // Add filter criteria if any are applied
+    let filterRow = 9;
+    if (searchJobNo !== 'all' || searchClientId !== 'all' || fromDate || toDate) {
+      worksheet.mergeCells(`A${filterRow}:G${filterRow}`);
+      worksheet.getCell(`A${filterRow}`).value = 'Filter Criteria:';
+      worksheet.getCell(`A${filterRow}`).font = { bold: true, size: 12 };
+      filterRow++;
+      
+      if (searchJobNo !== 'all') {
+        worksheet.mergeCells(`A${filterRow}:B${filterRow}`);
+        worksheet.getCell(`A${filterRow}`).value = 'Job Number:';
+        worksheet.mergeCells(`C${filterRow}:D${filterRow}`);
+        worksheet.getCell(`C${filterRow}`).value = searchJobNo;
+        filterRow++;
+      }
+      
+      if (searchClientId !== 'all') {
+        const clientName = clients.find(c => c.id.toString() === searchClientId)?.name || searchClientId;
+        worksheet.mergeCells(`A${filterRow}:B${filterRow}`);
+        worksheet.getCell(`A${filterRow}`).value = 'Client:';
+        worksheet.mergeCells(`C${filterRow}:D${filterRow}`);
+        worksheet.getCell(`C${filterRow}`).value = clientName;
+        filterRow++;
+      }
+      
+      if (fromDate) {
+        worksheet.mergeCells(`A${filterRow}:B${filterRow}`);
+        worksheet.getCell(`A${filterRow}`).value = 'From Date:';
+        worksheet.mergeCells(`C${filterRow}:D${filterRow}`);
+        worksheet.getCell(`C${filterRow}`).value = new Date(fromDate).toLocaleDateString();
+        filterRow++;
+      }
+      
+      if (toDate) {
+        worksheet.mergeCells(`A${filterRow}:B${filterRow}`);
+        worksheet.getCell(`A${filterRow}`).value = 'To Date:';
+        worksheet.mergeCells(`C${filterRow}:D${filterRow}`);
+        worksheet.getCell(`C${filterRow}`).value = new Date(toDate).toLocaleDateString();
+        filterRow++;
+      }
+      
+      filterRow++; // Add an empty row after filter criteria
+    }
+    
+    // Add table headers
+    const headerRow = filterRow;
+    worksheet.getRow(headerRow).values = [
+      'Job', 'Client', 'Bill Value', 'Payment Date', 'Payment Mode', 'Amount Paid', 'Balance Due'
+    ];
+    
+    // Style the header row
+    worksheet.getRow(headerRow).font = { bold: true };
+    worksheet.getRow(headerRow).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'E6F0FF' } // Light blue background
+    };
+    
+    // Add data rows
+    filteredStatuses.forEach((status, index) => {
+      const rowIndex = headerRow + index + 1;
+      worksheet.getRow(rowIndex).values = [
+        status.job?.jobNo || 'N/A',
+        status.client?.name || 'N/A',
+        status.billValue,
+        status.paymentDate ? new Date(status.paymentDate) : 'N/A',
+        status.paymentMode ? status.paymentMode.toUpperCase() : 'N/A',
+        status.amountPaid,
+        status.balanceDue
+      ];
+      
+      // Format currency cells
+      worksheet.getCell(`C${rowIndex}`).numFmt = '₹#,##0.00';
+      worksheet.getCell(`F${rowIndex}`).numFmt = '₹#,##0.00';
+      worksheet.getCell(`G${rowIndex}`).numFmt = '₹#,##0.00';
+      
+      // Format date cell
+      if (status.paymentDate) {
+        worksheet.getCell(`D${rowIndex}`).numFmt = 'dd/mm/yyyy';
+      }
+    });
+    
+    // Add totals row
+    const totalRow = headerRow + filteredStatuses.length + 1;
+    worksheet.getCell(`A${totalRow}`).value = 'TOTALS';
+    worksheet.mergeCells(`A${totalRow}:E${totalRow}`);
+    worksheet.getCell(`A${totalRow}`).font = { bold: true };
+    worksheet.getCell(`A${totalRow}`).alignment = { horizontal: 'right' };
+    
+    worksheet.getCell(`F${totalRow}`).value = totals.amountPaid;
+    worksheet.getCell(`F${totalRow}`).font = { bold: true };
+    worksheet.getCell(`F${totalRow}`).numFmt = '₹#,##0.00';
+    
+    worksheet.getCell(`G${totalRow}`).value = totals.balanceDue;
+    worksheet.getCell(`G${totalRow}`).font = { bold: true };
+    worksheet.getCell(`G${totalRow}`).numFmt = '₹#,##0.00';
+    
+    // Auto-size columns
+    worksheet.columns.forEach(column => {
+      let maxLength = 0;
+      column.eachCell({ includeEmpty: true }, cell => {
+        const columnLength = cell.value ? cell.value.toString().length : 10;
+        if (columnLength > maxLength) {
+          maxLength = columnLength;
+        }
+      });
+      column.width = maxLength < 10 ? 10 : maxLength + 2;
+    });
+    
+    // Add borders to all cells
+    worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+      row.eachCell({ includeEmpty: true }, cell => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+    
+    // Generate Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileDate = new Date().toISOString().split('T')[0];
+    const fileName = jobId 
+      ? `Payment_Status_Job_${jobId}_${fileDate}.xlsx` 
+      : `Client_Payment_Status_${fileDate}.xlsx`;
+    
+    // Save the file
+    saveAs(new Blob([buffer]), fileName);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Navbar />
@@ -231,10 +420,7 @@ const ClientPaymentStatusPage = () => {
           
           <Button 
             className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-200"
-            onClick={() => {
-              // Export functionality would go here
-              alert('Export functionality to be implemented');
-            }}
+            onClick={handleExportToExcel}
           >
             <Download className="h-4 w-4 mr-2" />
             Export Report
