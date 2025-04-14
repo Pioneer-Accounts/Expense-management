@@ -18,6 +18,8 @@ const SiteExpenseDetailPage = () => {
         const expenseResponse = await fetch(`http://localhost:5000/api/site-expenses/${id}`);
         if (!expenseResponse.ok) throw new Error('Failed to fetch site expense details');
         const expenseData = await expenseResponse.json();
+        console.log(expenseData);
+        
         setSiteExpense(expenseData);
       } catch (err) {
         setError(err.message || 'An error occurred while loading data');

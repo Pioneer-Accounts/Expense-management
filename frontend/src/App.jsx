@@ -31,6 +31,7 @@ import MaterialCodeForm from './pages/MaterialCodeForm';
 import SiteExpenseListPage from './pages/SiteExpenseListPage';
 import SiteExpenseForm from './pages/SiteExpenseForm';
 import SiteExpenseDetailPage from './pages/SiteExpenseDetailPage';
+import SiteExpenseEnquiryPage from './pages/SiteExpenseEnquiryPage';
 
 // Add this import
 import ClientPaymentStatusPage from './pages/ClientPaymentStatusPage';
@@ -283,6 +284,60 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SiteExpenseForm />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Add these new routes */}
+      <Route
+        path="/client-payment-status"
+        element={
+          <ProtectedRoute>
+            <ClientPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/client-payment-status/job/:jobId"
+        element={
+          <ProtectedRoute>
+            <ClientPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/contractor-payment-status"
+        element={
+          <ProtectedRoute>
+            <ContractorPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+
+<Route
+        path="/contractor-payment-status/:jobId"
+        element={
+          <ProtectedRoute>
+            <ContractorPaymentStatusPage />
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/site-expense-enquiry"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseEnquiryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/site-expense-enquiry/:jobId"
+        element={
+          <ProtectedRoute>
+            <SiteExpenseEnquiryPage />
           </ProtectedRoute>
         }
       />

@@ -195,6 +195,13 @@ const Navbar = () => {
                   >
                     New Site Expense
                   </Link>
+                  <Link 
+                    to="/site-expense-enquiry" 
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setSiteExpenseDropdownOpen(false)}
+                  >
+                    Site Expense Enquiry
+                  </Link>
                 </div>
               )}
             </div>
@@ -383,6 +390,13 @@ const Navbar = () => {
                       onClick={toggleMenu}
                     >
                       New Site Expense
+                    </Link>
+                    <Link
+                      to="/site-expense-enquiry"
+                      className="block px-3 py-2 rounded hover:bg-white/10 transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      Site Expense Enquiry
                     </Link>
                   </div>
                 )}
