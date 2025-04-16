@@ -6,9 +6,9 @@ import { AlertCircle, Calendar, Hash, DollarSign } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 const ClientBillForm = () => {
-  const { jobId } = useParams();
+  const { jobNo } = useParams();
   const [formData, setFormData] = useState({
-    jobId: jobId || '',
+    jobNo: jobNo || '',
     billHeading: '',
     date: new Date().toISOString().split('T')[0],
     billNo: '',
@@ -27,17 +27,17 @@ const ClientBillForm = () => {
 
   // Fetch job details when job ID changes
   useEffect(() => {
-    if (formData.jobId) {
-      fetchJobDetails(formData.jobId);
+    if (formData.jobNo) {
+      fetchJobDetails(formData.jobNo);
     }
-  }, [formData.jobId]);
+  }, [formData.jobNo]);
 
   // Fetch all bills for this job
   useEffect(() => {
-    if (formData.jobId) {
-      fetchBills(formData.jobId);
+    if (formData.jobNo) {
+      fetchBills(formData.jobNo);
     }
-  }, [formData.jobId]);
+  }, [formData.jobNo]);
 
   const fetchJobDetails = async (id) => {
     try {
@@ -54,9 +54,9 @@ const ClientBillForm = () => {
     }
   };
 
-  const fetchBills = async (jobId) => {
+  const fetchBills = async (jobNo) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/client-bills?jobId=${jobId}`);
+      const response = await fetch(`http://localhost:5000/api/client-bills?jobNo=${jobNo}`);
       if (!response.ok) {
         throw new Error('Failed to fetch bills');
       }
@@ -93,7 +93,7 @@ const ClientBillForm = () => {
     e.preventDefault();
     
     // Validation
-    if (!formData.jobId || !formData.billHeading || !formData.date || !formData.billNo || !formData.baseAmount) {
+    if (!formData.jobNo || !formData.billHeading || !formData.date || !formData.billNo || !formData.baseAmount) {
       setError('Please fill in all required fields');
       return;
     }
@@ -120,7 +120,7 @@ const ClientBillForm = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          jobId: formData.jobId,
+          jobNo: formData.jobNo,
           billHeading: formData.billHeading,
           date: formData.date,
           billNo: formData.billNo,
@@ -136,7 +136,7 @@ const ClientBillForm = () => {
       
       // Reset form and fetch updated bills
       resetForm();
-      fetchBills(formData.jobId);
+      fetchBills(formData.jobNo);
       
     } catch (err) {
       console.error(`Error ${isEditing ? 'updating' : 'creating'} bill:`, err);
@@ -148,7 +148,7 @@ const ClientBillForm = () => {
 
   const handleEdit = (bill) => {
     setFormData({
-      jobId: bill.jobId,
+      jobNo: bill.jobNo,
       billHeading: bill.billHeading,
       date: new Date(bill.date).toISOString().split('T')[0],
       billNo: bill.billNo,
@@ -178,7 +178,7 @@ const ClientBillForm = () => {
       }
       
       // Refresh bills list
-      fetchBills(formData.jobId);
+      fetchBills(formData.jobNo);
       
     } catch (err) {
       console.error('Error deleting bill:', err);
@@ -188,7 +188,7 @@ const ClientBillForm = () => {
 
   const resetForm = () => {
     setFormData({
-      jobId: formData.jobId, // Keep the job ID
+      jobNo: formData.jobNo, // Keep the job ID
       billHeading: '',
       date: new Date().toISOString().split('T')[0],
       billNo: '',
@@ -223,14 +223,14 @@ const ClientBillForm = () => {
                 )}
                 
                 <div className="mb-4">
-                  <label htmlFor="jobId" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="jobNo" className="block text-sm font-medium text-gray-700 mb-1">
                     Job ID <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    id="jobId"
-                    name="jobId"
-                    value={formData.jobId}
+                    id="jobNo"
+                    name="jobNo"
+                    value={formData.jobNo}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter Job ID"
@@ -412,7 +412,7 @@ const ClientBillForm = () => {
                     {bills.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-4 py-4 text-center text-muted-foreground">
-                          {formData.jobId ? 'No bills found for this job' : 'Enter a Job ID to view bills'}
+                          {formData.jobNo ? 'No bills found for this job' : 'Enter a Job ID to view bills'}
                         </td>
                       </tr>
                     ) : (

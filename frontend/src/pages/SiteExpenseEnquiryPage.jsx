@@ -233,7 +233,7 @@ const SiteExpenseEnquiryPage = () => {
             <CardTitle>Search Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div>
                 <Label htmlFor="jobNo">Job No</Label>
                 <Select value={searchJobNo} onValueChange={setSearchJobNo}>
@@ -287,9 +287,7 @@ const SiteExpenseEnquiryPage = () => {
                   onChange={(e) => setToDate(e.target.value)}
                 />
               </div>
-            </div>
-            
-            <div className="flex justify-end mt-4 space-x-2">
+              <div className="flex justify-end mt-4 space-x-2">
               <Button variant="outline" onClick={resetFilters}>
                 Reset
               </Button>
@@ -298,6 +296,9 @@ const SiteExpenseEnquiryPage = () => {
                 Search
               </Button>
             </div>
+            </div>
+            
+          
           </CardContent>
         </Card>
         

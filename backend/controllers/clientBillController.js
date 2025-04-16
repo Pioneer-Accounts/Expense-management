@@ -45,19 +45,25 @@ exports.getClientBillById = async (req, res) => {
 // Create a new client bill
 exports.createClientBill = async (req, res) => {
   try {
-    const { jobId,  billNo, date, amount, baseAmount, gst } = req.body;
+    const { jobNo, billNo, date, amount, baseAmount, gst } = req.body;
+
+    // Validate jobNo is provided
+    if (!jobNo) {
+      return res.status(400).json({ error: 'Job number is required' });
+    }
 
     // First, fetch the job to get the client ID
-    const job = await prisma.job.findUnique({
-      where: { id: parseInt(jobId) },
+    const job = await prisma.job.findFirst({
+      where: { jobNo: jobNo }, // Ensure jobNo is passed correctly
       include: { client: true }
     });
     
     if (!job) {
       return res.status(404).json({ error: 'Job not found' });
     }
-        // Use the client ID from the job
-        const clientId = job.client.id;
+    
+    // Use the client ID from the job
+    const clientId = job.client.id;
 
     const newClientBill = await prisma.clientBill.create({
       data: {
@@ -67,7 +73,7 @@ exports.createClientBill = async (req, res) => {
         baseAmount,
         gst,
         job: {
-          connect: { id: parseInt(jobId) }
+          connect: { id: job.id } // Connect using job.id instead of jobNo
         },
         client: {
           connect: { id: parseInt(clientId) }
